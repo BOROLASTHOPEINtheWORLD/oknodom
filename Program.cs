@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.Models;
 using Serilog;
@@ -14,6 +15,17 @@ try
     builder.Services.AddRazorPages();
     builder.Services.AddDbContext<OknodomDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(options =>
+        {
+           
+            options.LogoutPath = "/Account/Logout";
+            options.AccessDeniedPath = "/Home/AccessDenied";
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        });
+    builder.Services.AddAuthorization();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -29,6 +41,7 @@ try
 
     app.UseRouting();
 
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllerRoute(

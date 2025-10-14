@@ -15,54 +15,52 @@ public partial class OknodomDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Бригады> Бригадыs { get; set; }
+    public virtual DbSet<Бригады> Бригады { get; set; }
 
-    public virtual DbSet<ВыполнениеМонтажа> ВыполнениеМонтажаs { get; set; }
+    public virtual DbSet<ВыполнениеМонтажа> ВыполнениеМонтажа { get; set; }
 
-    public virtual DbSet<Заказы> Заказыs { get; set; }
+    public virtual DbSet<Заказы> Заказы { get; set; }
 
-    public virtual DbSet<Замеры> Замерыs { get; set; }
+    public virtual DbSet<Замеры> Замеры { get; set; }
 
-    public virtual DbSet<Комплектующие> Комплектующиеs { get; set; }
+    public virtual DbSet<Комплектующие> Комплектующие { get; set; }
 
-    public virtual DbSet<Материалы> Материалыs { get; set; }
+    public virtual DbSet<Материалы> Материалы { get; set; }
 
-    public virtual DbSet<Окна> Окнаs { get; set; }
+    public virtual DbSet<Окна> Окна { get; set; }
 
-    public virtual DbSet<ОконныеПроемы> ОконныеПроемыs { get; set; }
+    public virtual DbSet<ОконныеПроемы> ОконныеПроемы { get; set; }
 
-    public virtual DbSet<Пользователи> Пользователиs { get; set; }
+    public virtual DbSet<Пользователи> Пользователи { get; set; }
 
-    public virtual DbSet<Профили> Профилиs { get; set; }
+    public virtual DbSet<Профили> Профили { get; set; }
 
-    public virtual DbSet<Роли> Ролиs { get; set; }
+    public virtual DbSet<Роли> Роли { get; set; }
 
-    public virtual DbSet<СтатусыЗаказа> СтатусыЗаказаs { get; set; }
+    public virtual DbSet<СтатусыЗаказа> СтатусыЗаказа { get; set; }
 
-    public virtual DbSet<СтатусыСотрудников> СтатусыСотрудниковs { get; set; }
+    public virtual DbSet<Створки> Створки { get; set; }
 
-    public virtual DbSet<Створки> Створкиs { get; set; }
+    public virtual DbSet<Стеклопакеты> Стеклопакеты { get; set; }
 
-    public virtual DbSet<Стеклопакеты> Стеклопакетыs { get; set; }
+    public virtual DbSet<ТипыКомплектующих> ТипыКомплектующих { get; set; }
 
-    public virtual DbSet<ТипыКомплектующих> ТипыКомплектующихs { get; set; }
+    public virtual DbSet<ТипыСтворок> ТипыСтворок { get; set; }
 
-    public virtual DbSet<ТипыСтворок> ТипыСтворокs { get; set; }
+    public virtual DbSet<ТипыТоваров> ТипыТоваров { get; set; }
 
-    public virtual DbSet<ТипыТоваров> ТипыТоваровs { get; set; }
+    public virtual DbSet<ТипыУслуг> ТипыУслуг { get; set; }
 
-    public virtual DbSet<ТипыУслуг> ТипыУслугs { get; set; }
+    public virtual DbSet<Товары> Товары { get; set; }
 
-    public virtual DbSet<Товары> Товарыs { get; set; }
+    public virtual DbSet<ТоварыВЗаказе> ТоварыВЗаказе { get; set; }
 
-    public virtual DbSet<ТоварыВЗаказе> ТоварыВЗаказеs { get; set; }
+    public virtual DbSet<Услуги> Услуги { get; set; }
 
-    public virtual DbSet<Услуги> Услугиs { get; set; }
-
-    public virtual DbSet<УслугиВЗаказе> УслугиВЗаказеs { get; set; }
+    public virtual DbSet<УслугиВЗаказе> УслугиВЗаказе { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:DeffaultConnection");
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:DefaultConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -83,7 +81,7 @@ public partial class OknodomDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_вып__628FA481");
 
-            entity.HasOne(d => d.КодМонтажникаNavigation).WithMany(p => p.Бригадыs)
+            entity.HasOne(d => d.КодМонтажникаNavigation).WithMany(p => p.Бригады)
                 .HasForeignKey(d => d.КодМонтажника)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_мон__6383C8BA");
@@ -148,7 +146,7 @@ public partial class OknodomDbContext : DbContext
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("стоимость");
 
-            entity.HasOne(d => d.КодКлиентаNavigation).WithMany(p => p.Заказыs)
+            entity.HasOne(d => d.КодКлиентаNavigation).WithMany(p => p.Заказы)
                 .HasForeignKey(d => d.КодКлиента)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Заказы__код_клие__3B75D760");
@@ -175,7 +173,7 @@ public partial class OknodomDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Замеры__код_зака__5629CD9C");
 
-            entity.HasOne(d => d.КодЗамерщикаNavigation).WithMany(p => p.Замерыs)
+            entity.HasOne(d => d.КодЗамерщикаNavigation).WithMany(p => p.Замеры)
                 .HasForeignKey(d => d.КодЗамерщика)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Замеры__код_заме__5535A963");
@@ -300,6 +298,7 @@ public partial class OknodomDbContext : DbContext
             entity.HasIndex(e => e.Телефон, "UX_Пользователи_Телефон").IsUnique();
 
             entity.Property(e => e.КодПользователя).HasColumnName("код_пользователя");
+            entity.Property(e => e.Активный).HasColumnName("активный");
             entity.Property(e => e.Имя)
                 .HasMaxLength(100)
                 .HasColumnName("имя");
@@ -316,7 +315,6 @@ public partial class OknodomDbContext : DbContext
             entity.Property(e => e.Паспорт)
                 .HasMaxLength(12)
                 .HasColumnName("паспорт");
-            entity.Property(e => e.СтатусСотрудника).HasColumnName("статус_сотрудника");
             entity.Property(e => e.Телефон)
                 .HasMaxLength(20)
                 .HasColumnName("телефон");
@@ -328,10 +326,6 @@ public partial class OknodomDbContext : DbContext
                 .HasForeignKey(d => d.КодРоли)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Пользоват__код_р__37A5467C");
-
-            entity.HasOne(d => d.СтатусСотрудникаNavigation).WithMany(p => p.Пользователиs)
-                .HasForeignKey(d => d.СтатусСотрудника)
-                .HasConstraintName("FK__Пользоват__стату__38996AB5");
         });
 
         modelBuilder.Entity<Профили>(entity =>
@@ -380,18 +374,6 @@ public partial class OknodomDbContext : DbContext
             entity.Property(e => e.КодСтатусаЗаказа).HasColumnName("код_статуса_заказа");
             entity.Property(e => e.Название)
                 .HasMaxLength(100)
-                .HasColumnName("название");
-        });
-
-        modelBuilder.Entity<СтатусыСотрудников>(entity =>
-        {
-            entity.HasKey(e => e.Код).HasName("PK__Статусы___C8AC1204D7ADAECC");
-
-            entity.ToTable("Статусы_сотрудников");
-
-            entity.Property(e => e.Код).HasColumnName("код");
-            entity.Property(e => e.Название)
-                .HasMaxLength(50)
                 .HasColumnName("название");
         });
 
@@ -612,7 +594,6 @@ public partial class OknodomDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Услуги_в___код_у__07C12930");
         });
-
         OnModelCreatingPartial(modelBuilder);
     }
 

@@ -417,3 +417,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 obj/
+[Bb]in/
+[Oo]bj/
