@@ -1,4 +1,4 @@
-﻿@model OKNODOM.Models.Пользователи
+﻿@model OKNODOM.DTOs.LoginViewModel
 
 @{
     ViewData["Title"] = "Вход в личныый кабинет";
@@ -19,8 +19,8 @@
 
                 <div class="form-group">
                     <label asp-for="Пароль" class="form-label">Пароль</label>
-                    <input type="password" asp-for="Пароль" name="Password" class="form-input">
-                    <span asp-validation-for="Логин" class="text-danger"></span>
+                    <input type="password" asp-for="Пароль" class="form-input">
+                    <span asp-validation-for="Пароль" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">

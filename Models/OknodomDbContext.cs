@@ -81,7 +81,7 @@ public partial class OknodomDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_вып__628FA481");
 
-            entity.HasOne(d => d.КодМонтажникаNavigation).WithMany(p => p.Бригадыs)
+            entity.HasOne(d => d.КодМонтажникаNavigation).WithMany(p => p.Бригады)
                 .HasForeignKey(d => d.КодМонтажника)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_мон__6383C8BA");
@@ -146,7 +146,7 @@ public partial class OknodomDbContext : DbContext
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("стоимость");
 
-            entity.HasOne(d => d.КодКлиентаNavigation).WithMany(p => p.Заказыs)
+            entity.HasOne(d => d.КодКлиентаNavigation).WithMany(p => p.Заказы)
                 .HasForeignKey(d => d.КодКлиента)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Заказы__код_клие__3B75D760");
@@ -173,7 +173,7 @@ public partial class OknodomDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Замеры__код_зака__5629CD9C");
 
-            entity.HasOne(d => d.КодЗамерщикаNavigation).WithMany(p => p.Замерыs)
+            entity.HasOne(d => d.КодЗамерщикаNavigation).WithMany(p => p.Замеры)
                 .HasForeignKey(d => d.КодЗамерщика)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Замеры__код_заме__5535A963");

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OKNODOM.DTOs;
 using OKNODOM.Models;
 using System.Security.Claims;
 
@@ -20,23 +21,24 @@ namespace OKNODOM.Controllers
         }
         public IActionResult Login()
         {
-            return View(new Пользователи());
+            return View(new LoginViewModel());
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(Пользователи userModel)
+        public async Task<IActionResult> Login(LoginViewModel userModel)
         {
             if(ModelState.IsValid)
             {
                 var user = await _context.Пользователи
-                .FirstOrDefaultAsync(u => u.Логин == userModel.Логин && u.Пароль == userModel.Пароль);
+                    .Include(u=>u.КодРолиNavigation)
+                    .FirstOrDefaultAsync(u => u.Логин == userModel.Логин && u.Пароль == userModel.Пароль);
                 if (user != null)
                 {
                     var claims = new List<Claim> //список клеймов, где клейм это информация о пользователе для сессии
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.КодПользователя.ToString()),
                         new Claim(ClaimTypes.Name, user.Логин),
-                        new Claim(ClaimTypes.Role, user.КодРоли.ToString())
+                        new Claim(ClaimTypes.Role, user.КодРолиNavigation.Название.ToString())
                      };
 
                     var claimIdentity= new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -63,7 +65,6 @@ namespace OKNODOM.Controllers
                 }
                 ModelState.AddModelError(string.Empty, "Неверный логин или пароль");
             }
-            userModel.ЗапомнитьМеня = false;
             userModel.Пароль = string.Empty;
             return View(userModel);
         }
@@ -74,11 +75,11 @@ namespace OKNODOM.Controllers
             var user = await _context.Пользователи.FirstOrDefaultAsync(u => u.КодПользователя.ToString() == userId);
             return View(user);
         }
-        [HttpPost] // Предпочтительнее POST для Logout
-        [ValidateAntiForgeryToken] // Рекомендуется
+        [HttpPost] 
+        [ValidateAntiForgeryToken] 
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme); //очистка куки
             return RedirectToAction("Index", "Home");
         }
     }

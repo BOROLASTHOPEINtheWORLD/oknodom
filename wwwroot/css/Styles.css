@@ -66,9 +66,13 @@ body {
 
 
 .header.scrolled .nav-link--button {
-    padding: 5px 15px; 
+    padding: 10px 15px; 
     font-size: 13px; 
     transition: all 0.3s ease-in-out;
+}
+.header.scrolled .header-logo {
+    width: 60px;
+    height: 65px;
 }
 /*конец скролед*/
 
@@ -98,10 +102,7 @@ body {
     transition: all 0.3s ease-in-out;
     user-select: none;
 }
-.header.scrolled .header-logo {
-    width: 60px; 
-    height: 65px; 
-}
+
 
 .nav{
     display: flex;
@@ -130,6 +131,9 @@ body {
     font-weight: bold;
     user-select: none;
     transition: all 0.3s ease-in-out;
+    background: none;
+    box-sizing: border-box;
+    min-height: 45px;
 }
 
     .nav-link--button:hover {

@@ -459,3 +459,4 @@ C:\Users\htoya\source\repos\OKNODOM\bin\Debug\net8.0\refs\System.Xml.XPath.XDocu
 C:\Users\htoya\source\repos\OKNODOM\bin\Debug\net8.0\refs\WindowsBase.dll
 C:\Users\htoya\source\repos\OKNODOM\obj\Debug\net8.0\OKNODOM.genruntimeconfig.cache
 C:\Users\htoya\source\repos\OKNODOM\obj\Debug\net8.0\ref\OKNODOM.dll
+C:\Users\htoya\source\repos\OKNODOM\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
