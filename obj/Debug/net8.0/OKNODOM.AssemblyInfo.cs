@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OKNODOM")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b3bd1f7d7557c21b44e9d2e1ecb7251f481be72e")]
 [assembly: System.Reflection.AssemblyProductAttribute("OKNODOM")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OKNODOM")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

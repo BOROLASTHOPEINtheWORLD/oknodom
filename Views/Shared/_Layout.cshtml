@@ -1,39 +1,73 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - OKNODOM</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/OKNODOM.styles.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="~/favicon.ico" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">OKNODOM</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a asp-controller="Home" asp-action="Index">
+                        <img class="header-logo" 
+                            src="~/images/logo.png"
+                             alt="Логотип"
+                             asp-append-version="true"/>
+                    </a>
                 </div>
+
+                <div class="header-contacts">
+                    <a href="tel:+73512345678" class="contact-item phone">
+                        <svg width="18" height="18" viewBox="0 0 15 15">
+                             <path d="M14.1499 10.3034C14.3686 10.4128 14.5327 10.6589 14.5327 10.9323C14.5327 10.9597 14.5327 11.0144 14.5327 11.0691L13.8764 13.9128C13.7944 14.2136 13.5483 14.405 13.2475 14.405C6.22017 14.405 0.560013 8.74484 0.560013 1.7175C0.560013 1.41672 0.751419 1.17062 1.0522 1.08859L3.89595 0.432343C3.95064 0.432343 4.00533 0.404999 4.03267 0.404999C4.30611 0.404999 4.5522 0.569061 4.66158 0.815155L5.97408 3.87766C6.00142 3.95969 6.02876 4.04172 6.02876 4.12375C6.02876 4.3425 5.91939 4.53391 5.78267 4.64328L4.1147 6.01047C5.12642 8.14328 6.82173 9.83859 8.95454 10.8503L10.3217 9.18234C10.4311 9.04562 10.6225 8.93625 10.8139 8.93625C10.9233 8.93625 11.0053 8.96359 11.0874 8.99094L14.1499 10.3034Z" fill="#478405" />
+                         </svg>
+
+                     
+                        <span class="contact-text">+7 (351) 234-56-78</span>
+                    </a>
+
+                    <a href="mailto:info@oknodom.ru" class="contact-item email">
+                        <svg fill="currentColor" width="18" height="18" viewBox="0 0 15 15">
+                         
+                                <path d="M13.7966 3.62766C13.9059 3.54562 14.07 3.62766 14.07 3.76437V9.3425C14.07 10.0808 13.4684 10.655 12.7575 10.655H1.38251C0.644226 10.655 0.0700073 10.0808 0.0700073 9.3425V3.76437C0.0700073 3.62766 0.206726 3.54562 0.316101 3.62766C0.945007 4.11984 1.73798 4.72141 4.52704 6.74484C5.10126 7.155 6.08563 8.05734 7.07001 8.05734C8.02704 8.05734 9.03876 7.155 9.58563 6.74484C12.3747 4.72141 13.1677 4.11984 13.7966 3.62766ZM7.07001 7.155C6.41376 7.18234 5.51141 6.36203 5.04657 6.03391C1.40985 3.40891 1.13641 3.16281 0.316101 2.50656C0.152039 2.39719 0.0700073 2.20578 0.0700073 1.98703V1.4675C0.0700073 0.756561 0.644226 0.154999 1.38251 0.154999H12.7575C13.4684 0.154999 14.07 0.756561 14.07 1.4675V1.98703C14.07 2.20578 13.9606 2.39719 13.7966 2.50656C12.9763 3.16281 12.7028 3.40891 9.0661 6.03391C8.60126 6.36203 7.69891 7.18234 7.07001 7.155Z" fill="#478405" />
+                            
+
+                        </svg>
+                        <span class="contact-text">info@oknodom.ru</span>
+                    </a>
+                </div>
+
+                <nav class="nav">
+                    <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+                       asp-controller="Home" asp-action="Index">Главная</a>
+
+                    <a class="nav-link @(currentController == "Home" && currentAction == "About" ? "active" : "")"
+                       asp-controller="Home" asp-action="About">О компании</a>
+
+                    <a class="nav-link @(currentController == "Home" && currentAction == "Services" ? "active" : "")"
+                       asp-controller="Home" asp-action="Services">Услуги</a>
+
+                    <a class="nav-link @(currentController == "Portfolio" ? "active" : "")"
+                       asp-controller="Portfolio" asp-action="Index">Наши работы</a>
+
+                    <a class="nav-link nav-link--button @(currentController == "Account" && currentAction == "Login" ? "active" : "")"
+                       asp-controller="Account" asp-action="Login">Вход</a>
+                </nav>
             </div>
-        </nav>
+        </div>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+      
+    <div>
+        
             @RenderBody()
-        </main>
+
     </div>
 
     <footer class="border-top footer text-muted">
@@ -41,6 +75,7 @@
             &copy; 2025 - OKNODOM - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
