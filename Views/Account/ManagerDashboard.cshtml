@@ -1,0 +1,102 @@
+﻿@model OKNODOM.DTOs.ManagerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Панель управления менеджера";
+}
+
+<div class="manager-dashboard-section">
+    <div class="container">
+
+        <div class="filters-section">
+            <form method="get" asp-action="ManagerDashboard" id="filterForm">
+                <div class="filter-group">
+                    <label for="statusFilter">Статус:</label>
+                    <select class="filter-select" id="statusFilter" name="statusFilter">
+                        <option value="0" selected="@(Model.ВыбранныйСтатусКод == 0)">Все заявки</option>
+                        @foreach(var status in Model.ВсеСтатусы)
+                        {
+                            <option value="@status.КодСтатусаЗаказа"
+                                    selected="@(Model.ВыбранныйСтатусКод == status.КодСтатусаЗаказа)">
+                             @status.Название</option>
+                        }
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Сортировка:</label>
+                    <select class="filter-select" id="sortFilter" name="sortFilter">
+                        <option value="newest" selected="@(Model.Сортировка == "newest")">Сначала новые</option>
+                        <option value="oldest" selected="@(Model.Сортировка == "oldest")">Сначала старые</option>
+                    </select>
+                </div>
+                <button class="filter-btn">Применить</button>
+            </form>
+        </div>
+
+
+        <div class="order-table-wrapper">
+            @if (Model.Заказы.Any())
+            {
+                <table class="manager-orders-table">
+                    <thead>
+                        <tr>
+                            <th>№ Заказа</th>
+                            <th>Дата создания</th>
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Адрес</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Заказы)
+                        {
+                            <tr class="order-row" data-status="@order.КодСтатусаЗаказа">
+                                <td data-label="№ Заказа">
+                                    <strong>#@order.КодЗаказа</strong>
+                                </td>
+                                <td data-label="Дата">
+                                    <div class="date-time">
+                                        <div class="date">@order.ДатаСозданияЗаказа.ToString("dd.MM.yyyy")</div>
+                                        <div class="time">@order.ДатаСозданияЗаказа.ToString("HH:mm")</div>
+                                    </div>
+                                </td>
+                                <td data-label="Клиент">
+                                    <div class="client-info">
+                                        <div class="client-name">@order.КодКлиентаNavigation.Фамилия @order.КодКлиентаNavigation.Имя @order.КодКлиентаNavigation.Отчество</div>
+                                    </div>
+                                </td>
+                                <td data-label="Телефон">
+                                    <a href="tel:@order.КодКлиентаNavigation.Телефон" class="phone-link">
+                                        @order.КодКлиентаNavigation.Телефон
+                                    </a>
+                                </td>
+                                <td data-label="Адрес" class="address-cell">
+                                    <div class="address-text">@order.Адрес</div>
+                                </td>
+                                <td data-label="Статус">
+                                    <span class="status-tag">
+                                        @order.КодСтатусаЗаказаNavigation.Название
+                                    </span>
+                                </td>
+                                <td data-label="Действия">
+                                    <div class="action-buttons">
+                                        <a href="@Url.Action("OrderDetails", "Manager", new { id = order.КодЗаказа })"
+                                           class="action-btn primary">Обработать</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-orders-message">
+                    <h3>Нет заявок для обработки</h3>
+                    <p>Можно отдыхать</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

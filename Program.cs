@@ -19,7 +19,7 @@ try
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
-           
+            options.LoginPath = "/Account/Login";
             options.LogoutPath = "/Account/Logout";
             options.AccessDeniedPath = "/Home/AccessDenied";
             options.ExpireTimeSpan = TimeSpan.FromMinutes(60);

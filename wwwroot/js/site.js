@@ -27,3 +27,4 @@
         setInterval(nextSlide, intervalTime);
     }
 });
+

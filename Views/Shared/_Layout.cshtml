@@ -65,8 +65,14 @@
                                 Личный кабинет
                             </a>
                         }
-
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                        @if (User.IsInRole("Менеджер"))
+                        {
+                            <a class="nav-link nav-link--button @(currentController =="Account" && currentAction=="ManagerDashboard" ? "active" : "")"
+                                asp-controller="Account" asp-action="ManagerDashboard">
+                                Личный кабинет
+                            </a>
+                        }
+                        <form asp-controller="Account" asp-action="Logout" class="logout-form">
                             <button type="submit" class="nav-link nav-link--button">
                                 Выход
                             </button>
@@ -83,7 +89,6 @@
     </header>
       
     <div>
-        
             @RenderBody()
 
     </div>

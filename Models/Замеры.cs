@@ -11,11 +11,11 @@ public partial class Замеры
 
     public int КодЗаказа { get; set; }
 
-    public DateOnly? ДатаЗамера { get; set; }
+    public DateTime? ДатаЗамера { get; set; }
 
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
 
     public virtual Пользователи КодЗамерщикаNavigation { get; set; } = null!;
 
-    public virtual ICollection<ОконныеПроемы> ОконныеПроемыs { get; set; } = new List<ОконныеПроемы>();
+    public virtual ICollection<ОконныеПроемы> ОконныеПроемы { get; set; } = new List<ОконныеПроемы>();
 }

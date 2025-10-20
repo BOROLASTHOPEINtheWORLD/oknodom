@@ -1,0 +1,118 @@
+﻿@model OKNODOM.DTOs.OrderDetailsManagerViewModel
+
+@{
+    ViewData["Title"] = $"Заказ №{Model.Заказ.КодЗаказа}";
+}
+
+<div class="order-details-manager-section">
+    <div class="container">
+        <div class="header-action-row">
+            <h1 class="dashboard-title">Заказ №@Model.Заказ.КодЗаказа</h1>
+            <a asp-action="ManagerDashboard" asp-controller="Account" class="action-btn primary">← Назад к списку</a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-message">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="order-details-grid">
+            <div class="detail-card">
+                <h3 class="card-header-main">Детали заказа</h3>
+                <div class="detail-group">
+                    <span class="detail-label">Статус</span>
+                    <span class="detail-value status-tag status-@Model.Заказ.КодСтатусаЗаказа">
+                        @Model.Заказ.КодСтатусаЗаказаNavigation.Название
+                    </span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Дата создания</span>
+                    <span class="detail-value">@Model.Заказ.ДатаСозданияЗаказа.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Адрес установки</span>
+                    <span class="detail-value">@Model.Заказ.Адрес</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Оценка стоимости</span>
+                    <span class="detail-value">@(Model.Заказ.Стоимость.HasValue? Model.Заказ.Стоимость.Value.ToString("N2") + " ₽" : "Не оценено")</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Заказ.ПримечаниеКЗаказу))
+                {
+                   <div class="comment-accordion">
+                       <details class="comment-details">
+                           <summary class="comment-summary">
+                               Комментарий к заказу
+                           </summary>
+                            <div class="comment-content">
+                                @Model.Заказ.ПримечаниеКЗаказу
+                            </div>
+                       </details>
+
+                   </div>
+                }
+                <h3 class="card-header-main mt-4">Данные клиента</h3>
+                <div class="detail-group">
+                    <span class="detail-label">ФИО</span>
+                    <span class="detail-value">@Model.Заказ.КодКлиентаNavigation.Фамилия @Model.Заказ.КодКлиентаNavigation.Имя @Model.Заказ.КодКлиентаNavigation.Отчество</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Телефон</span>
+                    <span class="detail-value"><a href="tel:@Model.Заказ.КодКлиентаNavigation.Телефон">@Model.Заказ.КодКлиентаNavigation.Телефон</a></span>
+                </div>
+            </div>
+
+            <div class="action-card">
+                @if (Model.Заказ.КодСтатусаЗаказа == 1)
+                {
+                    <h3 class="card-header-main">Назначить замерщика</h3>
+                    <form asp-controller="Manager" asp-action="AssignMeasurer">
+                       <input type="hidden" name="orderId" value="@Model.Заказ.КодЗаказа"/>
+
+                        <div class="form-group">
+                            <label asp-for="ВыбранныйЗамерщик" class="form-label">Выбрать замерщика</label>
+                            <select id="ВыбранныйЗамерщик" name="ВыбранныйЗамерщик" class="form-select">
+                                <option value="">--- Выберите замерщика ---</option>
+                                @foreach (var measurer in Model.Замерщики)
+                                {
+                                    <option value="@measurer.КодПользователя">
+                                        @measurer.Фамилия @measurer.Имя @measurer.Отчество (@measurer.Телефон)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="ДатаЗамера" class="form-label">Предпочитаемая дата замера (необязательно)</label>
+                            <input type="datetime-local" id="ДатаЗамера" name="ДатаЗамера" class="form-input" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                        </div>
+                        <button type="submit" class="login-button">Назначить</button>
+                    </form>
+                }
+                else
+                {
+                    <h3 class="card-header-main">Статус замера</h3>
+                    @if (Model.Заказ.Замеры.Any())
+                    {
+                        var currentMeasurer = Model.Заказ.Замеры.FirstOrDefault();
+                        if (currentMeasurer != null && currentMeasurer.КодЗамерщикаNavigation != null)
+                        {
+                            <div class="info-message">
+                                <p class="info-line"><span class="info-label">Замерщик:</span> @currentMeasurer.КодЗамерщикаNavigation.Фамилия @currentMeasurer.КодЗамерщикаNavigation.Имя</p>
+                                <p class="info-line"><span class="info-label">Назначен:</span> @(currentMeasurer.ДатаЗамера?.ToString("dd.MM.yyyy") ?? "дата не указана")</p>
+                            </div>
+                        }
+                    }
+                    <div class="detail-group">
+                        <span class="detail-label">Текущий статус</span>
+                        <span class="detail-value status-tag status-@Model.Заказ.КодСтатусаЗаказа">@Model.Заказ.КодСтатусаЗаказаNavigation.Название</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

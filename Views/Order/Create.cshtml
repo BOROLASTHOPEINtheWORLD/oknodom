@@ -1,0 +1,45 @@
+﻿@model OKNODOM.DTOs.OrderViewModel
+
+@{
+    ViewData["Title"] = "Оформление заявки";
+    Layout = "_Layout";
+}
+<section class="order-form-section">
+    <div class="container">
+
+        <h1 class="order-title">Оформление заявки на работы</h1>
+        <p class="order-subtitle">Проверьте личные данные и укажите адрес установки.</p>
+
+        <div class="order-form-box">
+            <form asp-controller="Order" asp-action="Create" class="login-form">
+                @* Добавляем скрытое поле для ID, который нужен в POST-методе *@
+                <input type="hidden" asp-for="КодПользователя" />
+
+                <div class="form-group-readonly">
+                    <label asp-for="ПолноеИмя" class="form-label">ФИО клиента</label>
+                    <input asp-for="ПолноеИмя" class="form-input" readonly />
+                </div>
+
+                <div class="form-group-readonly">
+                    <label asp-for="Телефон" class="form-label">Контактный телефон</label>
+                    <input asp-for="Телефон" class="form-input" required />
+                    @* Здесь оставляем required, но позволяем редактировать*@
+                    <span asp-validation-for="Телефон" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Адрес" class="form-label">Адрес установки</label>
+                     <input asp-for="Адрес" class="form-input" required placeholder="Например: ул. Пушкина, д. 10, кв. 5" />
+                    <span asp-validation-for="Адрес" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Описание" class="form-label">Описание необходимых работ</label>
+                    <textarea asp-for="Описание" class="form-input" rows="4" placeholder="Например: Установка трехкамерного стеклопакета"></textarea>
+                </div>
+
+                <button type="submit" class="login-button">Создать заявку</button>
+            </form>
+        </div>
+    </div>
+</section>

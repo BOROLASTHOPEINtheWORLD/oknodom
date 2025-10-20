@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace OKNODOM.Models;
 
@@ -18,16 +19,18 @@ public partial class Заказы
     public decimal? Стоимость { get; set; }
 
     public string Адрес { get; set; } = null!;
+    [StringLength(500, ErrorMessage = "Превышено 500 символов")]
+    public string? ПримечаниеКЗаказу { get; set; } 
 
-    public virtual ICollection<ВыполнениеМонтажа> ВыполнениеМонтажаs { get; set; } = new List<ВыполнениеМонтажа>();
+    public virtual ICollection<ВыполнениеМонтажа> ВыполнениеМонтажа { get; set; } = new List<ВыполнениеМонтажа>();
 
-    public virtual ICollection<Замеры> Замерыs { get; set; } = new List<Замеры>();
+    public virtual ICollection<Замеры> Замеры { get; set; } = new List<Замеры>();
 
     public virtual Пользователи КодКлиентаNavigation { get; set; } = null!;
 
     public virtual СтатусыЗаказа КодСтатусаЗаказаNavigation { get; set; } = null!;
 
-    public virtual ICollection<ТоварыВЗаказе> ТоварыВЗаказеs { get; set; } = new List<ТоварыВЗаказе>();
+    public virtual ICollection<ТоварыВЗаказе> ТоварыВЗаказе { get; set; } = new List<ТоварыВЗаказе>();
 
-    public virtual ICollection<УслугиВЗаказе> УслугиВЗаказеs { get; set; } = new List<УслугиВЗаказе>();
+    public virtual ICollection<УслугиВЗаказе> УслугиВЗаказе { get; set; } = new List<УслугиВЗаказе>();
 }

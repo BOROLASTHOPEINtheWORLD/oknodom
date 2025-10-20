@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.DTOs;
 using OKNODOM.Models;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace OKNODOM.Controllers
@@ -60,21 +62,86 @@ namespace OKNODOM.Controllers
                     {
                         return RedirectToAction("ClientDashboard", "Account");
                     }
+                    else if(user.КодРолиNavigation.Название == "Менеджер")
+                    {
+                        return RedirectToAction("ManagerDashboard", "Account");
+                    }
+                    else if(user.КодРолиNavigation.Название == "Админ")
+                    {
+                        return RedirectToAction("AdminDashboard", "Account");
+                    }
 
-                    return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Home");
                 }
                 ModelState.AddModelError(string.Empty, "Неверный логин или пароль");
             }
             userModel.Пароль = string.Empty;
             return View(userModel);
         }
+
+
         [Authorize(Roles = "Клиент")]
         public async Task<IActionResult> ClientDashboard()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _context.Пользователи.FirstOrDefaultAsync(u => u.КодПользователя.ToString() == userId);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            Debug.WriteLine($"User id from cookie: {userId}");
+            foreach(var claim in User.Claims)
+            {
+                Debug.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+            }
+            var user = await _context.Пользователи
+                .Include(u=>u.Заказы)
+                    .ThenInclude(z=>z.КодСтатусаЗаказаNavigation)
+                .FirstOrDefaultAsync(u => u.КодПользователя == userId);
+            if(user == null)
+            {
+                HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return RedirectToAction("Index", "Home");
+            }
+            user.Заказы = user.Заказы.OrderByDescending(z => z.ДатаСозданияЗаказа).ToList();
+
             return View(user);
         }
+
+        [Authorize(Roles = "Менеджер")]
+        public async Task<IActionResult> ManagerDashboard(int statusFilter, string sortFilter="newest")
+        {
+
+            var allStatuses = await _context.СтатусыЗаказа.ToListAsync();
+            IQueryable<Заказы> orderQuery = _context.Заказы
+                    .Include(z=>z.КодКлиентаNavigation)
+                    .Include(z=>z.КодСтатусаЗаказаNavigation);
+            if(statusFilter > 0)
+            {
+                orderQuery = orderQuery.Where(z=>z.КодСтатусаЗаказа == statusFilter); 
+            }
+            switch (sortFilter)
+            {
+                case "newest":
+                    orderQuery = orderQuery.OrderByDescending(z => z.ДатаСозданияЗаказа);
+                    break;
+                case "oldest":
+                default:
+                    orderQuery = orderQuery.OrderBy(z => z.ДатаСозданияЗаказа);
+                    break;
+            }
+
+            var orders = await orderQuery.ToListAsync();
+
+            var viewModel = new ManagerDashboardViewModel
+            {
+                Заказы = orders,
+                ВсеСтатусы = allStatuses.OrderBy(s => s.КодСтатусаЗаказа),
+                ВыбранныйСтатусКод = statusFilter,
+                Сортировка = sortFilter
+
+            };
+
+        
+            return View(viewModel);
+        }
+
+
         [HttpPost] 
         [ValidateAntiForgeryToken] 
         public async Task<IActionResult> Logout()

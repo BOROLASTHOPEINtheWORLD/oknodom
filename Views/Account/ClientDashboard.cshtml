@@ -1,1 +1,89 @@
-﻿
+﻿@model OKNODOM.Models.Пользователи
+@{
+    ViewData["Title"] = "Личный кабинет";   
+}
+
+
+
+<div class="dashboard-section">
+    <div class="container">
+
+        <div class="dashboard-content-wrapper">
+
+            <div class="info-details-card">
+                <h3 class="card-header-small">Ваши контактные данные</h3>
+
+                <div class="info-group">
+                    <span class="info-label">ФИО</span>
+                    <span class="info-value">@Model.Фамилия @Model.Имя @Model.Отчество</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">@Model.Логин</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">Телефон</span>
+                    <span class="info-value">@Model.Телефон</span>
+                </div>
+
+                <a href="#" class="edit-profile-btn button-outline">Изменить данные</a>
+            </div>
+
+            <div class="orders-main-card">
+                <h3 class="card-header-main">Мои заказы</h3>
+                @if (Model.Заказы.Any())
+                {
+                    <div class="order-list-wrapper">
+                        @foreach(var order in Model.Заказы)
+                        {  
+                            <div class="order-item">
+                                <div class="order-header">
+
+                                    <span class="order-number"> Заказ от @order.ДатаСозданияЗаказа.ToString("dd.MM.yyyy")/#@order.КодЗаказа</span>
+                                    <span class="order-status status-@order.КодСтатусаЗаказа">
+                                            @order.КодСтатусаЗаказаNavigation.Название
+                                    </span>
+                                </div>
+
+                                <div class="order-details">
+                                    <p>
+                                        <span class="detail-label">Дата:</span>
+                                        @order.ДатаСозданияЗаказа
+                                    </p>
+                                    <p>
+                                        <span class="detail-label">Адрес:</span>
+                                        @order.Адрес
+                                    </p>
+                                    <p>
+                                        <span class="detail-label">Стоимость:</span>
+                                        @(order.Стоимость.HasValue ? order.Стоимость.Value.ToString("N2") + "₽" : "Ожидается расчёт")
+                                    </p>
+                                </div>
+                                <div class="order-actions">
+                                    <a href="#" class="order-detail-link">Подробнее</a>
+                                </div>
+                            </div>
+                            }
+                        
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <p class="empty-message">
+                            Заказов пока нет. Начните работу, оформив заявку
+                        </p>
+                        <a asp-action="Create" asp-controller="Order" class="main-cta-button">
+                            Оформить заявку
+                        </a>
+                    </div>
+                }
+                
+
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
