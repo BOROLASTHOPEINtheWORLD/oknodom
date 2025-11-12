@@ -1,0 +1,102 @@
+﻿@using OKNODOM.DTOs.MeasurerDto
+@model MeasurerDashboardViewModel
+
+@{  
+    ViewData["Title"] = "Панель управления замерщика";
+}
+
+<div class="measurer-dashboard-section">
+    <div class="container">
+        <div class="filters-section">
+            <form method="get" asp-action="MeasurerDashboard" id="filterForm">
+                <div class="filter-group">
+                    <label>Дата с:</label>
+                    <input type="date"
+                           name="dateFrom"
+                           value="@Model.ДатаС?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="filter-group">
+                    <label>Дата по:</label>
+                    <input type="date"
+                           name="dateTo"
+                           value="@Model.ДатаПо?.ToString("yyyy-MM-dd")" />
+                </div>
+                <button class="filter-btn">Применить</button>
+            </form>
+
+        </div>
+        <div class="order-table-wrapper">
+            @if (Model.Заказы.Any())
+            {
+                <table class="measurer-orders-table">
+                    <thead>
+                        <tr>
+                            <th>№ Заказа</th>
+                            <th>Дата замера</th>
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Адрес</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    
+                    </thead>
+                    <tbody>
+                        @foreach(var order in Model.Заказы)
+                        {
+                           
+                            <tr class="order-row">
+                                <td data-label="№Заказа">
+                                    <strong>#@order.КодЗаказа</strong>
+                                </td>
+
+                                <td data-label="Дата">
+                                   
+                                        <div class="date"> @(order.ДатаЗамера?.ToString("dd.MM.yyyy HH:mm"))</div>
+                                
+                                </td>
+                                <td data-label="Клиент">
+                                    <div class="client-info">
+                                        <div class="client-name">@order.ФиоКлиента </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Телефон">
+                                    <a href="tel:@order.Телефон" class="phone-link">
+                                        @order.Телефон
+                                    </a>
+                                </td>
+
+                                <td data-label="Адрес" class="address-cell">
+                                    <div class="address-text">@order.Адрес</div>
+                                </td>
+                                
+                                <td data-label="Статус">
+                                    <span class="status-tag">
+                                        @order.Статус
+                                    </span>
+                                </td>
+
+                                <td data-label="Действия">
+                                    <div class="action-buttons">
+                                        <a asp-controller="Measurer" asp-action="MeasureDetails" asp-route-id="@order.КодЗаказа"
+                                        class="action-btn primary">Подробнее</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                     
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-orders-message">
+                    <h3>Нет заявок для обработок</h3>
+                    <p>Можно отдохнуть</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

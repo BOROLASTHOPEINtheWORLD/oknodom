@@ -81,8 +81,8 @@
                                 </td>
                                 <td data-label="Действия">
                                     <div class="action-buttons">
-                                        <a href="@Url.Action("OrderDetails", "Manager", new { id = order.КодЗаказа })"
-                                           class="action-btn primary">Обработать</a>
+                                        <a asp-controller="Manager" asp-action="OrderDetails" asp-route-id="@order.КодЗаказа"
+                                           class="action-btn primary">Подробнее</a>
                                     </div>
                                 </td>
                             </tr>
@@ -94,7 +94,7 @@
             {
                 <div class="no-orders-message">
                     <h3>Нет заявок для обработки</h3>
-                    <p>Можно отдыхать</p>
+                    <p>Можно одохнуть</p>
                 </div>
             }
         </div>

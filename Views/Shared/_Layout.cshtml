@@ -72,6 +72,13 @@
                                 Личный кабинет
                             </a>
                         }
+                        @if (User.IsInRole("Замерщик"))
+                        {
+                            <a class="nav-link nav-link--button @(currentController=="Account" && currentAction=="MeasurerDashboard" ? "active" : "")"
+                                asp-controller="Account" asp-action="MeasurerDashboard">
+                                Личный кабинет
+                            </a>
+                        }
                         <form asp-controller="Account" asp-action="Logout" class="logout-form">
                             <button type="submit" class="nav-link nav-link--button">
                                 Выход

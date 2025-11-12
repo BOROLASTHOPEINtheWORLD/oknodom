@@ -12,8 +12,9 @@ public partial class ОконныеПроемы
     public decimal Высота { get; set; }
 
     public decimal Ширина { get; set; }
-
+    public int Этаж { get; set; }
     public string? Описание { get; set; }
+
 
     public virtual ICollection<ВыполнениеМонтажа> ВыполнениеМонтажаs { get; set; } = new List<ВыполнениеМонтажа>();
 

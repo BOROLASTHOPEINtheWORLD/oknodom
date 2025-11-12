@@ -1,0 +1,122 @@
+﻿@model OKNODOM.DTOs.MeasurerDto.OrderDetailsMeasurerViewModel
+
+@{
+    ViewData["Title"] = $"Замер по заказу №{Model.КодЗаказа}";
+}
+
+<div class="order-details-manager-section">
+    <div class="container">
+        <div class="header-action-row">
+            <h2>Замер по заказу №@Model.КодЗаказа</h2>
+            <a asp-action="MeasurerDashboard" asp-controller="Account" class="action-btn primary">← Назад к списку</a>
+        </div>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-message">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+        <div class="measure-details-grid">
+            <div class="detail-card client-info-card">
+                <h3 class="card-header-main">Детали клиента</h3>
+                <div class="detail-group">
+                    <span class="detail-label">Клиент</span>
+                    <span class="detail-value">@Model.КлиентФИО</span>
+                </div>
+
+                <div class="detail-group">
+                    <span class="detail-label">Адрес</span>
+                    <span class="detail-value">@Model.Адрес</span>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="SaveMeasure" asp-controller="Measurer" method="post" class="measure-form">
+            <input type="hidden" asp-for="КодЗамера" />
+            <input type="hidden" asp-for="КодЗаказа" />
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label>Дата замера:</label>
+                    <input type="datetime-local" asp-for="ДатаЗамера" />
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-container">
+                        <label class="checkbox-label">
+                            <input asp-for="ЕстьЛифт" class="checkbox-input" />
+                            <span class="checkbox-custom"></span>
+                            Есть лифт
+                        </label>
+
+                    </div>
+                </div>
+            </div>
+          
+
+            <h3 class="proem-header">Оконные проёмы (@Model.Проемы.Count)</h3>
+            <div id="proems">
+                @for (int i = 0; i < Model.Проемы.Count; i++)
+                {
+                    <div class="proem-item">
+                        <input type="hidden" asp-for="Проемы[@i].КодПроема"/>
+                        <div class="proem-fields-row">
+                            <label>Этаж</label>
+                            <input type="number" asp-for="Проемы[@i].Этаж" required />
+                        </div>
+
+                        <div class="field-item">
+                            <label>Ширина</label>
+                            <input type="number" asp-for="Проемы[@i].Ширина" step="10" required />
+                         </div>
+
+                        <div class="field-item">
+                            <label>Высота</label>
+                            <input type="number" asp-for="Проемы[@i].Высота" step="10" required />
+                        </div>
+
+                        <div class="field-item description-field">
+                            <label>Описание</label>
+                            <input type="text" asp-for="Проемы[@i].Описание" />
+                        </div>
+                        <button type="button" class="remove-proem-btn" onclick="removeProem(this)">-</button>
+                    </div>
+                }
+            </div>
+
+            <button type="button" onclick="addProem()">+ Добавить проём</button>
+            <button type="submit" class="save-btn">Сохранить замер</button>
+        </form>
+    </div>
+    
+</div>
+
+<script>
+    let index = @Model.Проемы.Count;
+
+    function addProem(){
+        const container = document.getElementById('proems');
+
+        const html = `
+            <div class="proem-item">
+                <input type="hidden" name="Проемы[${index}].КодПроема" value=""/>
+
+                 <label>Этаж</label>
+                <input type="number" name="Проемы[${index}].Этаж" value="1" required/>
+
+                <label>Ширина</label>
+                <input type="number" name="Проемы[${index}].Ширина" step="10"  required />
+
+                <label>Высота</label>
+                <input type="number" name="Проемы[${index}].Высота" step="10" required />
+
+                <label>Описание</label>
+                <input type="text" name="Проемы[${index}].Описание" />
+
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+        index++;
+    }
+</script>

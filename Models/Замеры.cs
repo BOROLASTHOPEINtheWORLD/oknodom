@@ -12,7 +12,7 @@ public partial class Замеры
     public int КодЗаказа { get; set; }
 
     public DateTime? ДатаЗамера { get; set; }
-
+    public bool? ЕстьЛифт {  get; set; }
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
 
     public virtual Пользователи КодЗамерщикаNavigation { get; set; } = null!;

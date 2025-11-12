@@ -72,13 +72,13 @@
                 {
                     <h3 class="card-header-main">Назначить замерщика</h3>
                     <form asp-controller="Manager" asp-action="AssignMeasurer">
-                       <input type="hidden" name="orderId" value="@Model.Заказ.КодЗаказа"/>
+                       <input type="hidden" name="КодЗаказа" value="@Model.Заказ.КодЗаказа"/>
 
                         <div class="form-group">
-                            <label asp-for="ВыбранныйЗамерщик" class="form-label">Выбрать замерщика</label>
-                            <select id="ВыбранныйЗамерщик" name="ВыбранныйЗамерщик" class="form-select">
+                            <label name="КодЗамерщика" class="form-label">Выбрать замерщика</label>
+                            <select name="КодЗамерщика" class="form-select">
                                 <option value="">--- Выберите замерщика ---</option>
-                                @foreach (var measurer in Model.Замерщики)
+                                @foreach(var measurer in Model.Замерщики)
                                 {
                                     <option value="@measurer.КодПользователя">
                                         @measurer.Фамилия @measurer.Имя @measurer.Отчество (@measurer.Телефон)
@@ -87,9 +87,9 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="ДатаЗамера" class="form-label">Предпочитаемая дата замера (необязательно)</label>
+                            <label for="ДатаЗамера" class="form-label">Предпочитаемая дата замера</label>
                             <input type="datetime-local" id="ДатаЗамера" name="ДатаЗамера" class="form-input" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                        </div>
+                        </div>  
                         <button type="submit" class="login-button">Назначить</button>
                     </form>
                 }
@@ -103,7 +103,7 @@
                         {
                             <div class="info-message">
                                 <p class="info-line"><span class="info-label">Замерщик:</span> @currentMeasurer.КодЗамерщикаNavigation.Фамилия @currentMeasurer.КодЗамерщикаNavigation.Имя</p>
-                                <p class="info-line"><span class="info-label">Назначен:</span> @(currentMeasurer.ДатаЗамера?.ToString("dd.MM.yyyy") ?? "дата не указана")</p>
+                                <p class="info-line"><span class="info-label">Назначен:</span> @(currentMeasurer.ДатаЗамера?.ToString("dd.MM.yyyy HH:mm") ?? "дата не указана")</p>
                             </div>
                         }
                     }

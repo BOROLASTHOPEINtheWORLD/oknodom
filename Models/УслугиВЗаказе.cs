@@ -11,7 +11,6 @@ public partial class УслугиВЗаказе
 
     public int КодУслуги { get; set; }
 
-    public int? КодТовараВЗаказе { get; set; }
 
     public int Количество { get; set; }
 
@@ -20,8 +19,6 @@ public partial class УслугиВЗаказе
     public string? Примечание { get; set; }
 
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
-
-    public virtual ТоварыВЗаказе? КодТовараВЗаказеNavigation { get; set; }
 
     public virtual Услуги КодУслугиNavigation { get; set; } = null!;
 }

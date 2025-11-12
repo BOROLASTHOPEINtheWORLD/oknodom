@@ -5,7 +5,7 @@ namespace OKNODOM.Models;
 
 public partial class Окна
 {
-    public int КодОкна { get; set; }
+    public int КодТовара { get; set; }
 
     public int КодПрофиля { get; set; }
 
@@ -18,6 +18,7 @@ public partial class Окна
     public int КоличествоСтворок { get; set; }
 
     public bool Стандартное { get; set; }
+    public int БазоваяГарантияМесяцев {  get; set; }
 
     public virtual Товары КодОкнаNavigation { get; set; } = null!;
 

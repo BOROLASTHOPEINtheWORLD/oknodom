@@ -6,6 +6,6 @@ namespace OKNODOM.DTOs
     {
         public Заказы Заказ { get; set; } = null!;
         public IEnumerable<Пользователи> Замерщики { get; set; } 
-        public int? ВыбранныйЗамерщик { get; set; }
+        
     }
 }

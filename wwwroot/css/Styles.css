@@ -786,11 +786,11 @@ border-color: var(--color-red-color) !important;
     gap: 5px;
 }
 
-    .filter-group label {
-        font-weight: 600;
-        color: var(--color-dark);
-        font-size: 0.9rem;
-    }
+.filter-group label {
+    font-weight: 600;
+    color: var(--color-dark);
+    font-size: 0.9rem;
+}
 
 .filter-select {
     padding: 8px 12px;
@@ -811,9 +811,9 @@ border-color: var(--color-red-color) !important;
     transition: background 0.3s;
 }
 
-    .filter-btn:hover {
-        background: #6a9c38;
-    }
+.filter-btn:hover {
+    background: #6a9c38;
+}
 
 /* ТАБЛИЦА - ПОЛНАЯ ШИРИНА */
 .order-table-wrapper {
@@ -836,34 +836,34 @@ border-color: var(--color-red-color) !important;
     background-color: var(--color-light);
     font-size: 1rem;
     min-width: 180px;
-    appearance: none; /* Убираем стандартный вид select для лучшей стилизации */
+    appearance: none; 
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23666" d="M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.748 3.908-3.748c0.533-0.481 1.141-0.446 1.576 0 0.436 0.445 0.408 1.197 0 1.615l-4.694 4.502c-0.287 0.276-0.742 0.276-1.029 0l-4.694-4.502c-0.408-0.418-0.436-1.17 0-1.615z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 10px center;
 }   
-    .manager-orders-table thead {
-        background: var(--color-primary);
-    }
+.manager-orders-table thead {
+    background: var(--color-primary);
+}
 
-    .manager-orders-table th {
-        padding: 12px 15px;
-        text-align: left;
-        font-weight: 600;
-        color: var(--color-dark);
-    }
+.manager-orders-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-dark);
+}
 
-    .manager-orders-table td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #e9ecef;
-    }
+.manager-orders-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+}
 
-    .manager-orders-table tbody tr {
-        transition: background-color 0.3s;
-    }
+.manager-orders-table tbody tr {
+    transition: background-color 0.3s;
+}
 
-        .manager-orders-table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
+.manager-orders-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
 
 .date-time {
     display: flex;
@@ -933,27 +933,27 @@ border-color: var(--color-red-color) !important;
     font-weight: 600;
 }
 
-    .action-btn.primary {
-        background: var(--color-primary);
-        color: var(--color-dark);
-        border: 1px solid var(--color-primary);
-    }
+.action-btn.primary {
+    background: var(--color-primary);
+    color: var(--color-dark);
+    border: 1px solid var(--color-primary);
+}
 
-        .action-btn.primary:hover {
-            background: #6a9c38;
-            border-color: #6a9c38;
-        }
+.action-btn.primary:hover {
+    background: #6a9c38;
+    border-color: #6a9c38;
+}
 
-    .action-btn.secondary {
-        background: #f8f9fa;
-        color: var(--color-dark);
-        border: 1px solid #dee2e6;
-    }
+.action-btn.secondary {
+background: #f8f9fa;
+color: var(--color-dark);
+border: 1px solid #dee2e6;
+}
 
-        .action-btn.secondary:hover {
-            background: #e9ecef;
-            border-color: #adb5bd;
-        }
+.action-btn.secondary:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
 
 
 
@@ -1007,7 +1007,7 @@ border-color: var(--color-red-color) !important;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    height: fit-content; /* Карточка действий будет нужной высоты */
+    
 }
 
 .card-header-main {
@@ -1066,3 +1066,99 @@ border-color: var(--color-red-color) !important;
 /*===============================*/
 /*========КОНЕЦ ДЕТАЛИ ЗАКАЗА МЕНЕДЖЕРА========*/
 /*===============================*/
+
+/*==========================*/
+/*===========ПАНЕЛЬ ЗАМЕРЩИКА===============*/
+/*==========================*/
+
+.measurer-dashboard-section {
+    min-height: 85vh;
+    background-color: var(--color-beige);
+}
+.measurer-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.measurer-orders-table thead {
+    background: var(--color-primary);
+}
+.measurer-orders-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.measurer-orders-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.measurer-orders-table tbody tr {
+    transition: background-color 0.3s;
+}
+
+/*========ЗАМЕРЩИК ДЕТАЛИ ==========*/
+.measure-details-grid{
+    display: flex;
+    margin-bottom: 25px;
+}
+.client-info-card{
+    flex-grow: 1;
+    max-width: 500px;
+    padding: 20px;
+}
+.measure-form{
+ padding: 30px;
+ background-color: var(--color-light);
+ border-radius: 8px;
+ box-shadow: 0 2px 10px rgba(0,0,0, 0.05);
+}
+.form-group-inline{
+    display: flex;
+    gap:30px;
+    margin-bottom: 20px;
+}
+.form-group-inline .form-group {
+    flex: 1;
+}
+.proem-header {
+    margin-top: 30px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #ddd;
+    color: var(--color-dark);
+}
+#proems{
+    margin-top: 20px;
+}
+.proem-item {
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    background-color: var(--color-light);
+}
+.proem-fields-row {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+.field-item {
+    flex-direction: column;
+    display: flex;
+}
+.proem-fields-row .field-item input {
+    width: 100%;
+}
+.proem-fields-row .field-item:nth-child(1), /* Этаж */
+.proem-fields-row .field-item:nth-child(2), /* Ширина */
+.proem-fields-row .field-item:nth-child(3) { /* Высота */
+    max-width: 120px;
+}
+.description-field {
+    flex-grow: 1; /* Описание занимает оставшееся место */
+}
+/*========ЗАМЕРЩИК ДЕТАЛИ КОНЕЦ==========*/

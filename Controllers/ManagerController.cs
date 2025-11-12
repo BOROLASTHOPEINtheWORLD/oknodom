@@ -21,11 +21,11 @@ namespace OKNODOM.Controllers
                 .Include(z => z.КодСтатусаЗаказаNavigation)
                 .Include(z => z.Замеры)
                 .FirstOrDefaultAsync(z => z.КодЗаказа == id);
-            if (order == null) return NotFound();   
+            if (order == null) return NotFound();
 
             var measurers = await _context.Пользователи
-                .Where(u=>u.КодРоли == 3)
-                .OrderBy(u=> u.Фамилия)
+                .Where(u => u.КодРоли == 3)
+                .OrderBy(u => u.Фамилия)
                 .ToListAsync();
 
             var viewModel = new OrderDetailsManagerViewModel
@@ -35,32 +35,34 @@ namespace OKNODOM.Controllers
             };
             return View(viewModel);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AssignMeasurer(int orderId, int selectedMeasurerId)
+        public async Task<IActionResult> AssignMeasurer(AssignMeasureViewModel model)
         {
-            var order = await _context.Заказы
-                .FirstOrDefaultAsync(z=>z.КодЗаказа ==  orderId);
 
-            if (order == null || order.КодСтатусаЗаказа !=1) 
+            var order = await _context.Заказы
+                .FirstOrDefaultAsync(z => z.КодЗаказа == model.КодЗаказа);
+
+            if (order == null || order.КодСтатусаЗаказа != 1)
             {
                 TempData["ErrorMessage"] = "Невозможно назначить замерщика";
                 return RedirectToAction("ManagerDashboard", "Account");
-            } 
+            }
             var newMeasurement = new Замеры
             {
-                КодЗаказа = orderId,
-                КодЗамерщика = selectedMeasurerId,
-                ДатаЗамера = DateTime.Now
+                КодЗаказа = model.КодЗаказа,
+                КодЗамерщика = model.КодЗамерщика,
+                ДатаЗамера = model.ДатаЗамера
             };
-         
+            _context.Замеры.Add(newMeasurement);
             order.КодСтатусаЗаказа = 2; //статус назначенного замера
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Замерщик успешно назначен на заказ №{orderId}. Статус обновлен";
-            return RedirectToAction("OrderDetails", new {id=orderId});
+            TempData["SuccessMessage"] = $"Замерщик успешно назначен на заказ №{model.КодЗаказа}. Статус обновлен";
+            return RedirectToAction("OrderDetails", new { id = model.КодЗаказа });
         }
-        
     }
 }
+      

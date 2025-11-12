@@ -15,16 +15,18 @@
     //slider
     const slider = document.querySelector(".hero-slider-bg");
     if (slider) {
-        const slides = document.querySelectorAll(".slide")
+        const slides = document.querySelectorAll(".slide");
         let currentSlideIndex = 0;
-        const intervalTime = 5000;
 
-        function nextSlide() {
+        function ChangeSlide() {
             slides[currentSlideIndex].classList.remove('active');
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             slides[currentSlideIndex].classList.add('active');
+
         }
-        setInterval(nextSlide, intervalTime);
+        setInterval(ChangeSlide, 5000);
     }
+    
+   
 });
 

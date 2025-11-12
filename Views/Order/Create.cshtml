@@ -4,7 +4,7 @@
     ViewData["Title"] = "Оформление заявки";
     Layout = "_Layout";
 }
-<section class="order-form-section">
+<div class="order-form-section">
     <div class="container">
 
         <h1 class="order-title">Оформление заявки на работы</h1>
@@ -12,7 +12,7 @@
 
         <div class="order-form-box">
             <form asp-controller="Order" asp-action="Create" class="login-form">
-                @* Добавляем скрытое поле для ID, который нужен в POST-методе *@
+                
                 <input type="hidden" asp-for="КодПользователя" />
 
                 <div class="form-group-readonly">
@@ -23,7 +23,7 @@
                 <div class="form-group-readonly">
                     <label asp-for="Телефон" class="form-label">Контактный телефон</label>
                     <input asp-for="Телефон" class="form-input" required />
-                    @* Здесь оставляем required, но позволяем редактировать*@
+               
                     <span asp-validation-for="Телефон" class="text-danger"></span>
                 </div>
 
@@ -42,4 +42,4 @@
             </form>
         </div>
     </div>
-</section>
+</div>

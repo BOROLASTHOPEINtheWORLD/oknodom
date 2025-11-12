@@ -16,14 +16,11 @@ public partial class ТоварыВЗаказе
     public int Количество { get; set; }
 
     public decimal ЦенаНаМоментЗаказа { get; set; }
+    public int ГарантияМесяцев {  get; set; }
+    public DateOnly ГарантияДо {  get; set; }
 
     public virtual ВыполнениеМонтажа? ВыполнениеМонтажа { get; set; }
-
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
-
     public virtual ОконныеПроемы? КодОконногоПроемаNavigation { get; set; }
-
     public virtual Товары КодТовараNavigation { get; set; } = null!;
-
-    public virtual ICollection<УслугиВЗаказе> УслугиВЗаказеs { get; set; } = new List<УслугиВЗаказе>();
 }

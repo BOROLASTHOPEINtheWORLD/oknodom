@@ -26,7 +26,7 @@ public partial class Пользователи
     public string Телефон { get; set; } = null!;
     
     public bool? Активный { get; set; }
-
+        
     public virtual ICollection<Бригады> Бригады { get; set; } = new List<Бригады>();
 
     public virtual ICollection<Заказы> Заказы { get; set; } = new List<Заказы>();

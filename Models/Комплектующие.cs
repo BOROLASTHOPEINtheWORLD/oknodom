@@ -5,7 +5,7 @@ namespace OKNODOM.Models;
 
 public partial class Комплектующие
 {
-    public int КодКомплектующего { get; set; }
+    public int КодТовара { get; set; }
 
     public int КодТипаКомплектующего { get; set; }
 
