@@ -15,8 +15,6 @@ public partial class Комплектующие
 
     public int? ШиринаМм { get; set; }
 
-    public int? ВысотаМм { get; set; }
-
     public decimal? ВесКг { get; set; }
 
     public virtual Товары КодКомплектующегоNavigation { get; set; } = null!;

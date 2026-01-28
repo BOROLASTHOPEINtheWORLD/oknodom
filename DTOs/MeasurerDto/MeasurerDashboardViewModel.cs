@@ -7,5 +7,6 @@ namespace OKNODOM.DTOs.MeasurerDto
         public List<MeasurerOrderViewModel> Заказы { get; set; }
         public DateTime? ДатаС { get; set; }
         public DateTime? ДатаПо { get; set; }
+        public string АктивнаяВкладка { get; set; } = "active";
     }
 }

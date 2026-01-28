@@ -7,6 +7,24 @@
 
 <div class="measurer-dashboard-section">
     <div class="container">
+
+        <div class="tabs-container">
+            <div class="tabs">
+                <a asp-action="MeasurerDashboard"
+                   asp-controller="Account"
+                   asp-route-tab="active"
+                   class="tab @(Model.АктивнаяВкладка == "active" ? "active" : "")">
+                    Активные замеры
+                </a>
+                <a asp-action="MeasurerDashboard"
+                   asp-controller="Account"
+                   asp-route-tab="completed"
+                   class="tab @(Model.АктивнаяВкладка == "completed" ? "active" : "")">
+                    Выполненные замеры
+                </a>
+            </div>
+        </div>
+
         <div class="filters-section">
             <form method="get" asp-action="MeasurerDashboard" id="filterForm">
                 <div class="filter-group">
@@ -21,7 +39,13 @@
                            name="dateTo"
                            value="@Model.ДатаПо?.ToString("yyyy-MM-dd")" />
                 </div>
-                <button class="filter-btn">Применить</button>
+                <a asp-action="MeasurerDashboard"
+                   asp-controller="Account"
+                   asp-route-tab="@Model.АктивнаяВкладка"
+                   class="action-btn secondary"
+                   id="resetBtn">Сбросить</a>
+                <a asp-action="MeasurerDashboard" asp-controller="Account"
+                   asp-route-tab="@Model.АктивнаяВкладка" class="action-btn secondary">Сбросить</a>     
             </form>
 
         </div>
@@ -99,4 +123,61 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const dateFrom = document.getElementById('dateFrom');
+            const dateTo = document.getElementById('dateTo');
+            const resetBtn = document.getElementById('resetBtn');
+  
+            let debounceTimer;
+
+            function submitFilterForm() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+
+                    if (dateFrom.value && dateTo.value) {
+                        const fromDate = new Date(dateFrom.value);
+                        const toDate = new Date(dateTo.value);
+                        
+                        if (fromDate > toDate) {
+                            alert('Дата "с" не может быть позже даты "по"');
+                            return;
+                        }
+                    }
+
+                    filterForm.submit();
+                }, 500); 
+            }
+
+            if (dateFrom) {
+                dateFrom.addEventListener('change', submitFilterForm);
+                dateFrom.addEventListener('blur', submitFilterForm);
+            }
+            
+            if (dateTo) {
+                dateTo.addEventListener('change', submitFilterForm);
+                dateTo.addEventListener('blur', submitFilterForm);
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+   
+                    if (dateFrom) dateFrom.value = '';
+                    if (dateTo) dateTo.value = '';
+
+                    window.location.href = this.href;
+                });
+            }
+        }
+    </script>
+    }
+        
+        
+    
+
+          
 

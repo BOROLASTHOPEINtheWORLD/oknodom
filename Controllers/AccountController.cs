@@ -23,13 +23,14 @@ namespace OKNODOM.Controllers
             _logger = logger;
             _context = context;
         }
-
+      
         public IActionResult Login()
         {
             return View(new LoginViewModel());
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> Login(LoginViewModel userModel)
         {
             if(ModelState.IsValid)
@@ -91,11 +92,7 @@ namespace OKNODOM.Controllers
         public async Task<IActionResult> ClientDashboard()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            Debug.WriteLine($"User id from cookie: {userId}");
-            foreach(var claim in User.Claims)
-            {
-                Debug.WriteLine($"Claim: {claim.Type} = {claim.Value}");
-            }
+
             var user = await _context.Пользователи
                 .FirstOrDefaultAsync(u => u.КодПользователя == userId);
             if(user == null)
@@ -104,7 +101,7 @@ namespace OKNODOM.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            IEnumerable<Заказы> orders = await _context.Заказы
+            var orders = await _context.Заказы
                 .Where(z=>z.КодКлиента == userId)
                 .Include(z=>z.КодСтатусаЗаказаNavigation)
                 .OrderByDescending(z=>z.ДатаСозданияЗаказа)
@@ -115,7 +112,7 @@ namespace OKNODOM.Controllers
         }
 
         [Authorize(Roles = "Менеджер")]
-        public async Task<IActionResult> ManagerDashboard(int statusFilter, string sortFilter="newest")
+        public async Task<IActionResult> ManagerDashboard(int statusFilter, string sortFilter="newest", string search = "")
         {
 
             var allStatuses = await _context.СтатусыЗаказа.ToListAsync();
@@ -125,6 +122,19 @@ namespace OKNODOM.Controllers
             if(statusFilter > 0)
             {
                 orderQuery = orderQuery.Where(z=>z.КодСтатусаЗаказа == statusFilter); 
+            }
+            // Фильтр по поиску (адрес или ФИО)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower().Trim();
+                orderQuery = orderQuery.Where(z =>
+                    z.Адрес.ToLower().Contains(search) ||
+                    z.КодКлиентаNavigation.Фамилия.ToLower().Contains(search) ||
+                    z.КодКлиентаNavigation.Имя.ToLower().Contains(search) ||
+                    z.КодКлиентаNavigation.Отчество.ToLower().Contains(search) ||
+                    (z.КодКлиентаNavigation.Фамилия + " " +
+                     z.КодКлиентаNavigation.Имя + " " +
+                     z.КодКлиентаNavigation.Отчество).ToLower().Contains(search));
             }
             switch (sortFilter)
             {
@@ -144,31 +154,43 @@ namespace OKNODOM.Controllers
                 Заказы = orders,
                 ВсеСтатусы = allStatuses.OrderBy(s => s.КодСтатусаЗаказа),
                 ВыбранныйСтатусКод = statusFilter,
-                Сортировка = sortFilter
+                Сортировка = sortFilter,
+                Поиск = search
 
             };    
             return View(viewModel);
         }
 
         [Authorize(Roles = "Замерщик")]
-        public async Task<IActionResult> MeasurerDashboard(DateTime? dateFrom = null, DateTime? dateTo = null)
-       {
+        public async Task<IActionResult> MeasurerDashboard(DateTime? dateFrom = null, DateTime? dateTo = null, string tab = "active")
+        {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var query = _context.Замеры
-                .Where(z => z.КодЗамерщика == userId);
-            if(dateFrom.HasValue)
+            var activeQuery = _context.Замеры
+                 .Where(z => z.КодЗамерщика == userId
+                         && z.КодЗаказаNavigation.КодСтатусаЗаказа == 2);
+
+            var completedQuery = _context.Замеры
+                .Include(z => z.КодЗаказаNavigation)
+                .Where(z => z.КодЗамерщика == userId
+                        && z.КодЗаказаNavigation.КодСтатусаЗаказа > 2);
+
+            if (dateFrom.HasValue)
             {
-                query = query.Where(z => z.ДатаЗамера >= dateFrom.Value);
+                activeQuery = activeQuery.Where(z => z.ДатаЗамера >= dateFrom.Value);
+                completedQuery = completedQuery.Where(z => z.ДатаЗамера >= dateFrom.Value);
             }
             if (dateTo.HasValue)
             {
                 var endOfDays = dateTo.Value.AddDays(1);
-                query = query.Where(z=>z.ДатаЗамера < endOfDays);
+                activeQuery = activeQuery.Where(z => z.ДатаЗамера < endOfDays);
+                completedQuery = completedQuery.Where(z=>z.ДатаЗамера < endOfDays);
             }
-            
-            var orders = await query
-                .OrderByDescending(z=>z.ДатаЗамера)
-                .Select(z=> new MeasurerOrderViewModel
+
+            IQueryable<Замеры> currentQuery = tab == "active" ? activeQuery : completedQuery;
+
+            var orders = await currentQuery
+                .OrderByDescending(z => z.ДатаЗамера)
+                .Select(z => new MeasurerOrderViewModel
                 {
                     КодЗаказа = z.КодЗаказа,
                     Адрес = z.КодЗаказаNavigation.Адрес,
@@ -185,10 +207,12 @@ namespace OKNODOM.Controllers
             {
                 Заказы = orders,
                 ДатаС = dateFrom,
-                ДатаПо = dateTo
+                ДатаПо = dateTo,
+                АктивнаяВкладка = tab
             };
-              return View(viewModel);      
-            }
+            return View(viewModel);
+        }
+                
 
         [HttpPost] 
         [ValidateAntiForgeryToken] 

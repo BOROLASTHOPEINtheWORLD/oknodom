@@ -19,6 +19,11 @@
     padding: 0; 
 }
 
+html, body {
+    height: 100%;
+    min-height: 100vh;
+}
+
 @font-face {
     font-family: "MyCustomFont";
     src: url('../fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-muw.woff2') format('woff2');
@@ -945,7 +950,7 @@ border-color: var(--color-red-color) !important;
 }
 
 .action-btn.secondary {
-background: #f8f9fa;
+background: var(--color-light);
 color: var(--color-dark);
 border: 1px solid #dee2e6;
 }
@@ -955,7 +960,20 @@ border: 1px solid #dee2e6;
     border-color: #adb5bd;
 }
 
+.search-input {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    
+    width: 100%;
+}
 
+.search-input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124, 179, 66, 0.2);
+}
 
 
 .no-orders-message {
@@ -976,10 +994,14 @@ border: 1px solid #dee2e6;
     color: var(--color-text-gray);
     font-size: 1rem;
 }
+/*===============================*/
+/*========ДЕТАЛИ ЗАКАЗА МЕНЕДЖЕРА========*/
+/*===============================*/
 
 /*===============================*/
 /*========ДЕТАЛИ ЗАКАЗА МЕНЕДЖЕРА========*/
 /*===============================*/
+
 .order-details-manager-section {
     padding: 60px 0;
     min-height: 85vh;
@@ -990,39 +1012,40 @@ border: 1px solid #dee2e6;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 40px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
 }
-
-
 
 .order-details-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* 2/3 для деталей, 1/3 для действий */
+    grid-template-columns: 2fr 1fr;
     gap: 30px;
 }
 
-.detail-card, .action-card {
+.detail-card,
+.action-card {
     background-color: var(--color-light);
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    
+    border: 1px solid #e0e0e0;
 }
 
 .card-header-main {
-    font-size: 1.4rem;
-    color: var(--color-primary);
+    font-size: 1.3rem;
+    color: var(--color-dark);
     margin-bottom: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
     border-bottom: 1px solid #ddd;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .detail-group {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px dashed #f0f0f0;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
 }
 
 .detail-label {
@@ -1046,6 +1069,7 @@ border: 1px solid #dee2e6;
 .mt-4 {
     margin-top: 25px;
 }
+
 .comment-details {
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -1063,10 +1087,421 @@ border: 1px solid #dee2e6;
     padding: 15px;
     border-top: 1px solid #ddd;
 }
+
+/* Added new enhanced styles for OrderDetails page */
+
+/* Alert Messages - clean design */
+.alert-success {
+    max-width: 1280px;
+    margin: 0 auto 20px;
+    padding: 14px 18px;
+    background: #f1f8f4;
+    border-left: 3px solid var(--color-primary);
+    color: #1b5e20;
+    font-size: 14px;
+}
+
+.alert-error {
+    max-width: 1280px;
+    margin: 0 auto 20px;
+    padding: 14px 18px;
+    background: #fef5f6;
+    border-left: 3px solid #d32f2f;
+    color: #b71c1c;
+    font-size: 14px;
+}
+
+/* Order card header */
+.order-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.status-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: #f5f5f5;
+    color: var(--color-dark);
+    font-weight: 600;
+    border: 1px solid #ddd;
+}
+
+/* Payment status badges */
+.payment-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+}
+
+    .payment-badge.paid {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-color: #a5d6a7;
+    }
+
+    .payment-badge.unpaid {
+        background: #fff3e0;
+        color: #e65100;
+        border-color: #ffcc80;
+    }
+
+/* Client section */
+.client-section-header {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+/* Contact links */
+.contact-link {
+    color: var(--color-dark);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.contact-link:hover {
+    color: var(--color-primary);
+}
+
+/* Comment box */
+.comment-box {
+    margin-top: 25px;
+    border: 1px solid #ddd;
+}
+
+.comment-header {
+    padding: 12px 16px;
+    background: #f8f8f8;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-dark);
+    border-bottom: 1px solid #ddd;
+}
+
+.comment-body {
+    padding: 16px;
+    background: white;
+    line-height: 1.6;
+    color: var(--color-text-dark);
+}
+
+.section-header-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+/* Form */
+.measurer-form {
+    margin-top: 20px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* Measurer info */
+.measurer-info {
+    margin-bottom: 20px;
+    padding: 14px;
+    background: #fafafa;
+}
+
+.measurer-name {
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 4px;
+}
+
+.measurer-phone {
+    font-size: 13px;
+    color: var(--color-text-gray);
+}
+
+/* Stats */
+.stat-item {
+    padding: 12px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 12px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--color-text-gray);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 1rem;
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+.text-muted {
+    color: var(--color-text-gray);
+}
+
+/* Proem items */
+.proem-header {
+    margin-top: 20px;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+    color: var(--color-dark);
+    font-weight: 700;
+}
+
+#proems {
+    margin-top: 15px;
+}
+
+.proem-item {
+    border: 1px solid #e0e0e0;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+}
+
+.proem-fields-row {
+    display: flex;
+    gap: 15px;
+}
+
+.field-item {
+    flex-direction: column;
+    display: flex;
+}
+
+    .field-item label {
+        margin-bottom: 6px;
+    }
+
+    .field-item div {
+        padding: 8px 12px;
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+    }
+
+.proem-description {
+    margin-top: 12px;
+}
+
+.proem-description-text {
+    font-size: 14px;
+    color: var(--color-dark);
+    margin-top: 6px;
+}
+
+/* Empty states */
+.empty-state-message {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--color-text-gray);
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+}
+
+/* Configuration */
+.config-header {
+    margin-top: 30px;
+}
+
+.config-button-wrapper {
+    margin-top: 15px;
+}
+
+.configuration-summary {
+    margin-top: 20px;
+    padding: 16px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+}
+
+.summary-header {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--color-dark);
+}
+
+.config-section {
+    margin-top: 30px;
+}
+
+/* Table */
+.config-table-wrapper {
+    margin-top: 20px;
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+}
+
+.config-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: white;
+}
+
+    .config-table thead {
+        background: #f5f5f5;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .config-table th {
+        text-align: left;
+        padding: 12px 14px;
+        font-weight: 600;
+        color: var(--color-dark);
+        font-size: 13px;
+        text-transform: uppercase;
+    }
+
+        .config-table th.center {
+            text-align: center;
+        }
+
+        .config-table th.right {
+            text-align: right;
+        }
+
+    .config-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .config-table tbody tr:hover {
+            background-color: #fafafa;
+        }
+
+    .config-table td {
+        padding: 12px 14px;
+    }
+
+        .config-table td.center {
+            text-align: center;
+        }
+
+        .config-table td.right {
+            text-align: right;
+        }
+
+        .config-table td.bold {
+            font-weight: 600;
+        }
+
+/* Product info */
+.product-name {
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 4px;
+}
+
+.product-details,
+.product-warranty {
+    font-size: 12px;
+    color: var(--color-text-gray);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+/* Type badges - clean design */
+.type-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+
+    .type-badge.window {
+        background: var(--color-primary);
+        color: var(--color-dark);
+        border-color: var(--color-primary);
+    }
+
+    .type-badge.accessory {
+        background: #4caf50;
+        color: white;
+        border-color: #4caf50;
+    }
+
+    .type-badge.service {
+        background: #ff9800;
+        color: white;
+        border-color: #ff9800;
+    }
+
+/* Table footer */
+.config-table tfoot tr {
+    border-top: 2px solid #ddd;
+}
+
+.config-table tfoot td {
+    padding: 10px 14px;
+    font-weight: 600;
+}
+
+.config-table tfoot .right {
+    text-align: right;
+}
+
+.config-table tfoot .bold {
+    font-weight: 600;
+}
+
+.config-table tfoot tr.total-row {
+    background: #f5f5f5;
+    border-top: 2px solid #ddd;
+}
+
+    .config-table tfoot tr.total-row td {
+        padding: 14px;
+        font-size: 1.15rem;
+        color: var(--color-primary);
+        font-weight: 700;
+    }
+
+/* Empty config */
+.empty-config-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+}
+
+    .empty-config-state svg {
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+.empty-config-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-dark);
+}
+
+.empty-config-text {
+    color: var(--color-text-gray);
+    font-size: 14px;
+}
+
 /*===============================*/
 /*========КОНЕЦ ДЕТАЛИ ЗАКАЗА МЕНЕДЖЕРА========*/
 /*===============================*/
-
 /*==========================*/
 /*===========ПАНЕЛЬ ЗАМЕРЩИКА===============*/
 /*==========================*/
@@ -1159,6 +1594,42 @@ border: 1px solid #dee2e6;
     max-width: 120px;
 }
 .description-field {
-    flex-grow: 1; /* Описание занимает оставшееся место */
+    flex-grow: 1; 
+}
+.tabs-container {
+    margin: 20px 0;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+    padding: 12px 24px;
+    text-decoration: none;
+    color: #666;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.badge {
+    background: #6c757d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.tab.active .badge {
+    background: #007bff;
 }
 /*========ЗАМЕРЩИК ДЕТАЛИ КОНЕЦ==========*/

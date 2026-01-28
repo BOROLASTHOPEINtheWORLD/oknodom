@@ -11,9 +11,9 @@ public partial class Окна
 
     public int КодСтеклопакета { get; set; }
 
-    public decimal Ширина { get; set; }
+    public int Ширина { get; set; }
 
-    public decimal Высота { get; set; }
+    public int Высота { get; set; }
 
     public int КоличествоСтворок { get; set; }
 
@@ -26,5 +26,5 @@ public partial class Окна
 
     public virtual Стеклопакеты КодСтеклопакетаNavigation { get; set; } = null!;
 
-    public virtual ICollection<Створки> Створкиs { get; set; } = new List<Створки>();
+    public virtual ICollection<Створки> Створки { get; set; } = new List<Створки>();
 }

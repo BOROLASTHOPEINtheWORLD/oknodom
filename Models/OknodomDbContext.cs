@@ -191,11 +191,11 @@ public partial class OknodomDbContext : DbContext
 
             entity.Property(e => e.КодТовара)
                 .ValueGeneratedNever()
-                .HasColumnName("код_комплектующего");
+                .HasColumnName("код_товара");
             entity.Property(e => e.ВесКг)
                 .HasColumnType("decimal(5, 2)")
-                .HasColumnName("вес_кг");
-            entity.Property(e => e.ВысотаМм).HasColumnName("высота_мм");
+                .HasColumnName("вес_кг");   
+        
             entity.Property(e => e.ДлинаМм).HasColumnName("длина_мм");
             entity.Property(e => e.КодМатериала).HasColumnName("код_материала");
             entity.Property(e => e.КодТипаКомплектующего).HasColumnName("код_типа_комплектующего");
@@ -243,14 +243,14 @@ public partial class OknodomDbContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("код_товара");
             entity.Property(e => e.Высота)
-                .HasColumnType("decimal(10, 2)")
+                .HasColumnType("int")
                 .HasColumnName("высота");
             entity.Property(e => e.КодПрофиля).HasColumnName("код_профиля");
             entity.Property(e => e.КодСтеклопакета).HasColumnName("код_стеклопакета");
             entity.Property(e => e.КоличествоСтворок).HasColumnName("количество_створок");
             entity.Property(e => e.Стандартное).HasColumnName("стандартное");
             entity.Property(e => e.Ширина)
-                .HasColumnType("decimal(10, 2)")
+                .HasColumnType("int")
                 .HasColumnName("ширина");
             entity.Property(e => e.БазоваяГарантияМесяцев).HasColumnName("базовая_гарантия_месяцев");
 
@@ -278,12 +278,12 @@ public partial class OknodomDbContext : DbContext
 
             entity.Property(e => e.КодПроема).HasColumnName("код_проема");
             entity.Property(e => e.Высота)
-                .HasColumnType("decimal(10, 2)")
+                .HasColumnType("int")
                 .HasColumnName("высота");
             entity.Property(e => e.КодЗамера).HasColumnName("код_замера");
             entity.Property(e => e.Описание).HasColumnName("описание");
             entity.Property(e => e.Ширина)
-                .HasColumnType("decimal(10, 2)")
+                .HasColumnType("int")
                 .HasColumnName("ширина");
             entity.Property(e => e.Этаж).HasColumnName("этаж");
             entity.HasOne(d => d.КодЗамераNavigation).WithMany(p => p.ОконныеПроемы)
@@ -341,20 +341,20 @@ public partial class OknodomDbContext : DbContext
 
             entity.Property(e => e.КодПрофиля).HasColumnName("код_профиля");
             entity.Property(e => e.Звукоизоляция)
-                .HasColumnType("decimal(10, 2)")
+              
                 .HasColumnName("звукоизоляция");
             entity.Property(e => e.КоличествоКамер).HasColumnName("количество_камер");
             entity.Property(e => e.Название)
                 .HasMaxLength(100)
                 .HasColumnName("название");
             entity.Property(e => e.СопротивлениеТеплопередаче)
-                .HasColumnType("decimal(10, 2)")
+              
                 .HasColumnName("сопротивление_теплопередаче");
             entity.Property(e => e.ТолщинаСтеклопакета)
-                .HasColumnType("decimal(10, 2)")
+               
                 .HasColumnName("толщина_стеклопакета");
             entity.Property(e => e.Ширина)
-                .HasColumnType("decimal(10, 2)")
+                
                 .HasColumnName("ширина");
         });
 
@@ -393,7 +393,7 @@ public partial class OknodomDbContext : DbContext
             entity.Property(e => e.КодТипаСтворки).HasColumnName("код_типа_створки");
             entity.Property(e => e.НомерСтворки).HasColumnName("номер_створки");
 
-            entity.HasOne(d => d.КодОкнаNavigation).WithMany(p => p.Створкиs)
+            entity.HasOne(d => d.КодОкнаNavigation).WithMany(p => p.Створки)
                 .HasForeignKey(d => d.КодОкна)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Створки__код_окн__66603565");
@@ -488,7 +488,7 @@ public partial class OknodomDbContext : DbContext
             entity.Property(e => e.Название)
                 .HasMaxLength(255)
                 .HasColumnName("название");
-            entity.Property(e => e.ТипТовара).HasColumnName("тип_товара");
+            entity.Property(e => e.ТипТовара).HasColumnName("код_типа_товара");
             entity.Property(e => e.Фото)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -500,7 +500,7 @@ public partial class OknodomDbContext : DbContext
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("цена");
 
-            entity.HasOne(d => d.ТипТовараNavigation).WithMany(p => p.Товарыs)
+            entity.HasOne(d => d.ТипТовараNavigation).WithMany(p => p.Товары)
                 .HasForeignKey(d => d.ТипТовара)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Товары__тип_това__403A8C7D");
@@ -536,7 +536,7 @@ public partial class OknodomDbContext : DbContext
                 .HasForeignKey(d => d.КодОконногоПроема)
                 .HasConstraintName("FK_Товары_в_заказе_Оконные_проемы");
 
-            entity.HasOne(d => d.КодТовараNavigation).WithMany(p => p.ТоварыВЗаказеs)
+            entity.HasOne(d => d.КодТовараNavigation).WithMany(p => p.ТоварыВЗаказе)
                 .HasForeignKey(d => d.КодТовара)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Товары_в___код_т__52593CB8");

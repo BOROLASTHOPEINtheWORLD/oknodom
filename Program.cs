@@ -52,7 +52,7 @@ try
 }
 catch(Exception ex)
 {
-    Log.Fatal(ex, "Приложение краш");
+    Log.Fatal(ex, "Ошибка запуска приложения");
 }
 finally
 {

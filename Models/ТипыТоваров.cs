@@ -9,5 +9,5 @@ public partial class ТипыТоваров
 
     public string Название { get; set; } = null!;
 
-    public virtual ICollection<Товары> Товарыs { get; set; } = new List<Товары>();
+    public virtual ICollection<Товары> Товары { get; set; } = new List<Товары>();
 }

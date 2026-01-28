@@ -9,9 +9,9 @@ public partial class ОконныеПроемы
 
     public int КодЗамера { get; set; }
 
-    public decimal Высота { get; set; }
+    public int Высота { get; set; }
 
-    public decimal Ширина { get; set; }
+    public int Ширина { get; set; }
     public int Этаж { get; set; }
     public string? Описание { get; set; }
 

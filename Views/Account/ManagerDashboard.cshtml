@@ -10,6 +10,14 @@
         <div class="filters-section">
             <form method="get" asp-action="ManagerDashboard" id="filterForm">
                 <div class="filter-group">
+                    <label for="search">Поиск:</label>
+                    <input type="text"
+                           class="search-input"
+                           id="search"
+                           name="search"
+                           value="@Model.Поиск" />
+                </div>
+                <div class="filter-group">
                     <label for="statusFilter">Статус:</label>
                     <select class="filter-select" id="statusFilter" name="statusFilter">
                         <option value="0" selected="@(Model.ВыбранныйСтатусКод == 0)">Все заявки</option>
@@ -28,13 +36,15 @@
                         <option value="oldest" selected="@(Model.Сортировка == "oldest")">Сначала старые</option>
                     </select>
                 </div>
-                <button class="filter-btn">Применить</button>
+                <a asp-action="ManagerDashboard"
+                   class="action-btn primary"
+                   id="resetBtn">Сбросить</a>
             </form>
         </div>
 
 
         <div class="order-table-wrapper">
-            @if (Model.Заказы.Any())
+            @if (Model.Заказы != null)
             {
                 <table class="manager-orders-table">
                     <thead>
@@ -100,3 +110,58 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const searchInput = document.getElementById('search');
+            const statusFilter = document.getElementById('statusFilter');
+            const sortFilter = document.getElementById('sortFilter');
+            const resetBtn = document.getElementById('resetBtn');
+
+            let debounceTimer;
+
+            function submitFilterForm() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    filterForm.submit();
+                }, 500); 
+            }
+
+
+            if (searchInput) {
+                let searchTimer;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(submitFilterForm, 800);
+                });
+
+            }
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', submitFilterForm);
+            }
+
+            if (sortFilter) {
+                sortFilter.addEventListener('change', submitFilterForm);
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Очищаем все поля
+                    if (searchInput) searchInput.value = '';
+                    if (statusFilter) statusFilter.value = '0';
+                    if (sortFilter) sortFilter.value = 'newest';
+
+                    // Отправляем форму
+                    filterForm.submit();
+                });
+            }
+
+        });
+
+
+    </script>
+}

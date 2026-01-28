@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = $"Замер по заказу №{Model.КодЗаказа}";
+    var можноРедактировать = ViewBag.МожноРедактировать as bool? ?? true;
 }
 
 <div class="order-details-manager-section">
@@ -25,7 +26,10 @@
                     <span class="detail-label">Клиент</span>
                     <span class="detail-value">@Model.КлиентФИО</span>
                 </div>
-
+                <div class="detail-group">
+                    <span class="detail-label">Телефон</span>
+                    <span class="detail-value">@Model.Телефон</span>
+                </div>
                 <div class="detail-group">
                     <span class="detail-label">Адрес</span>
                     <span class="detail-value">@Model.Адрес</span>
@@ -33,90 +37,156 @@
             </div>
         </div>
 
+
         <form asp-action="SaveMeasure" asp-controller="Measurer" method="post" class="measure-form">
             <input type="hidden" asp-for="КодЗамера" />
             <input type="hidden" asp-for="КодЗаказа" />
             <div class="form-group-inline">
                 <div class="form-group">
                     <label>Дата замера:</label>
-                    <input type="datetime-local" asp-for="ДатаЗамера" />
+                    <div class="detail-value" style="padding: 6px 12px; background: #f8f9fa; border-radius: 4px; font-weight: 500;">
+                        @(Model.ДатаЗамера?.ToString("dd.MM.yyyy HH:mm") ?? "—")
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <div class="checkbox-container">
+                       
                         <label class="checkbox-label">
                             <input asp-for="ЕстьЛифт" class="checkbox-input" />
                             <span class="checkbox-custom"></span>
-                            Есть лифт
+                            <span class="checkbox-text">Есть лифт</span>
                         </label>
-
                     </div>
                 </div>
             </div>
+
           
 
-            <h3 class="proem-header">Оконные проёмы (@Model.Проемы.Count)</h3>
+
+            <h3 id="proemsCounter" class="card-header-main">Оконные проёмы (@Model.Проемы.Count)</h3>
             <div id="proems">
                 @for (int i = 0; i < Model.Проемы.Count; i++)
                 {
                     <div class="proem-item">
-                        <input type="hidden" asp-for="Проемы[@i].КодПроема"/>
-                        <div class="proem-fields-row">
-                            <label>Этаж</label>
-                            <input type="number" asp-for="Проемы[@i].Этаж" required />
+                        <input type="hidden" asp-for="Проемы[@i].КодПроема" />
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                @Html.ValidationSummary(true)
+                            </div>
+                        }
+                        <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                            <div>
+                                <label>Этаж</label>
+                                <input type="number" asp-for="Проемы[@i].Этаж" min="1" style="width: 70px; padding: 6px;" required />
+                            </div>
+                            <div>
+                                <label>Ширина, мм</label>
+                                <input type="number"
+                                       name="Проемы[@i].Ширина"
+                                       value="@Model.Проемы[i].Ширина"
+                                       step="10"
+                                       min="200"
+                                       placeholder="1500"
+                                       style="width: 100px; padding: 6px;"
+                                       required />
+                            </div>
+                            <div style="margin: 0 5px; align-self: center;">×</div>
+                            <div>
+                                <label>Высота, мм</label>
+                                <input type="number"
+                                       name="Проемы[@i].Высота"
+                                       value="@Model.Проемы[i].Высота"
+                                       step="10"
+                                       min="200"
+                                       placeholder="1200"
+                                       style="width: 100px; padding: 6px;"
+                                       required />
+                            </div>
+                            <button type="button"
+                                    class="action-btn secondary"
+                                    style="padding: 4px 10px; font-size: 1.2rem; min-width: 40px; border-radius: 50%;"
+                                    title="Удалить проём"
+                                    onclick="removeProem(this)">
+                                ✕
+                            </button>
                         </div>
-
-                        <div class="field-item">
-                            <label>Ширина</label>
-                            <input type="number" asp-for="Проемы[@i].Ширина" step="10" required />
-                         </div>
-
-                        <div class="field-item">
-                            <label>Высота</label>
-                            <input type="number" asp-for="Проемы[@i].Высота" step="10" required />
-                        </div>
-
-                        <div class="field-item description-field">
+                        <div style="margin-top: 10px;">
                             <label>Описание</label>
-                            <input type="text" asp-for="Проемы[@i].Описание" />
+                            <textarea name="Проемы[@i].Описание"
+                                  rows="2"
+                                  style="width: 100%; padding: 6px; resize: vertical;"
+                                  placeholder="Кухня, левое окно">@Model.Проемы[i].Описание</textarea>
                         </div>
-                        <button type="button" class="remove-proem-btn" onclick="removeProem(this)">-</button>
                     </div>
                 }
             </div>
 
-            <button type="button" onclick="addProem()">+ Добавить проём</button>
-            <button type="submit" class="save-btn">Сохранить замер</button>
+            @if (можноРедактировать)
+            {
+                <button type="button" onclick="addProem()" class="action-btn secondary">+ Добавить проём</button>
+                <button type="submit" class="action-btn primary">Сохранить замер</button>
+            }
+           
         </form>
     </div>
-    
 </div>
 
 <script>
     let index = @Model.Проемы.Count;
+    const container = document.getElementById('proems');
+    const counth3 = document.getElementById('proemsCounter');
 
-    function addProem(){
-        const container = document.getElementById('proems');
+    function updateProemCount() {
+        const currentCount = document.querySelectorAll('.proem-item').length;
+        counth3.textContent = `Оконные проёмы (${currentCount})`;
+    }
 
+    function addProem() {
         const html = `
             <div class="proem-item">
-                <input type="hidden" name="Проемы[${index}].КодПроема" value=""/>
-
-                 <label>Этаж</label>
-                <input type="number" name="Проемы[${index}].Этаж" value="1" required/>
-
-                <label>Ширина</label>
-                <input type="number" name="Проемы[${index}].Ширина" step="10"  required />
-
-                <label>Высота</label>
-                <input type="number" name="Проемы[${index}].Высота" step="10" required />
-
-                <label>Описание</label>
-                <input type="text" name="Проемы[${index}].Описание" />
-
-        `;
+                <input type="hidden" name="Проемы[${index}].КодПроема" value="" />
+                <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                    <div>
+                        <label>Этаж</label>
+                        <input type="number" name="Проемы[${index}].Этаж" value="1" min="1" style="width: 70px; padding: 6px;" required />
+                    </div>
+                    <div>
+                        <label>Ширина, мм</label>
+                        <input type="number" name="Проемы[${index}].Ширина" step="10" min="200" placeholder="1500" style="width: 100px; padding: 6px;" required />
+                    </div>
+                    <div style="margin: 0 5px; align-self: center;">×</div>
+                    <div>
+                        <label>Высота, мм</label>
+                        <input type="number" name="Проемы[${index}].Высота" step="10" min="200" placeholder="1200" style="width: 100px; padding: 6px;" required />
+                    </div>
+                    <button type="button"
+                            class="action-btn secondary"
+                            style="padding: 4px 10px; font-size: 1.2rem; min-width: 40px; border-radius: 50%;"
+                            title="Удалить проём"
+                            onclick="removeProem(this)">
+                        ✕
+                    </button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label>Описание</label>
+                     <textarea name="Проемы[${index}].Описание"
+                                      rows="2"
+                                      style="width: 100%; padding: 6px; resize: vertical;"
+                                      placeholder="Кухня, левое окно"></textarea>
+                </div>  
+            </div>`;    
 
         container.insertAdjacentHTML('beforeend', html);
         index++;
+        updateProemCount();
+    }
+
+    function removeProem(btn) {
+        if (confirm('Удалить проём?')) {
+            btn.closest('.proem-item').remove();
+            updateProemCount();
+        }
     }
 </script>

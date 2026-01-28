@@ -25,5 +25,5 @@ public partial class Товары
 
     public virtual ТипыТоваров ТипТовараNavigation { get; set; } = null!;
 
-    public virtual ICollection<ТоварыВЗаказе> ТоварыВЗаказеs { get; set; } = new List<ТоварыВЗаказе>();
+    public virtual ICollection<ТоварыВЗаказе> ТоварыВЗаказе { get; set; } = new List<ТоварыВЗаказе>();
 }

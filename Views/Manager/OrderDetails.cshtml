@@ -1,118 +1,413 @@
 ﻿@model OKNODOM.DTOs.OrderDetailsManagerViewModel
-
 @{
     ViewData["Title"] = $"Заказ №{Model.Заказ.КодЗаказа}";
+    var canConfigure = Model.МожноКонфигурировать;
+    var hasConfiguration = Model.ТекущиеТовары.Any() || Model.ТекущиеУслуги.Any();
 }
 
 <div class="order-details-manager-section">
     <div class="container">
+
+        <!-- Шапка с навигацией -->
         <div class="header-action-row">
-            <h1 class="dashboard-title">Заказ №@Model.Заказ.КодЗаказа</h1>
-            <a asp-action="ManagerDashboard" asp-controller="Account" class="action-btn primary">← Назад к списку</a>
+            <h2>Детали по заказу №@Model.Заказ.КодЗаказа</h2>
+            <a asp-action="ManagerDashboard" asp-controller="Account" class="action-btn primary">
+                ⭠ Назад к списку
+            </a>
         </div>
 
+        <!-- Уведомления -->
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-message">@TempData["SuccessMessage"]</div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            <div class="alert-success">
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
         }
 
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-error">
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+        }
+
+        <!-- Основная сетка: 2/3 контент, 1/3 действия -->
         <div class="order-details-grid">
+
+            <!-- Левая колонка: детали заказа -->
             <div class="detail-card">
-                <h3 class="card-header-main">Детали заказа</h3>
-                <div class="detail-group">
-                    <span class="detail-label">Статус</span>
-                    <span class="detail-value status-tag status-@Model.Заказ.КодСтатусаЗаказа">
+                <div class="card-header-main">
+                    <span class="order-card-title">
+                        Заказ №@Model.Заказ.КодЗаказа
+                    </span>
+                    <span class="order-status">
                         @Model.Заказ.КодСтатусаЗаказаNavigation.Название
                     </span>
                 </div>
 
+                <!-- Основная информация -->
                 <div class="detail-group">
-                    <span class="detail-label">Дата создания</span>
+                    <span class="detail-label">Дата создания:</span>
                     <span class="detail-value">@Model.Заказ.ДатаСозданияЗаказа.ToString("dd.MM.yyyy HH:mm")</span>
                 </div>
                 <div class="detail-group">
-                    <span class="detail-label">Адрес установки</span>
+                    <span class="detail-label">Адрес установки:</span>
                     <span class="detail-value">@Model.Заказ.Адрес</span>
                 </div>
                 <div class="detail-group">
-                    <span class="detail-label">Оценка стоимости</span>
-                    <span class="detail-value">@(Model.Заказ.Стоимость.HasValue? Model.Заказ.Стоимость.Value.ToString("N2") + " ₽" : "Не оценено")</span>
+                    <span class="detail-label">Общая сумма:</span>
+                    <span class="detail-value">
+                        @Model.ОбщаяСумма.ToString("N0") Р
+                    </span>
                 </div>
+                <div class="detail-group">
+                    <span class="detail-label">Статус оплаты:</span>
+                    <span class="detail-value">
+                        @if (Model.Заказ.СтатусОплаты)
+                        {
+                            <span class="payment-badge paid">Оплачен</span>
+                        }
+                        else
+                        {
+                            <span class="payment-badge unpaid">Не оплачен</span>
+                        }
+                    </span>
+                </div>
+
+                <!-- Информация о клиенте -->
+                <div class="mt-4">
+                    <h4 class="client-section-header">
+                        Информация о клиенте
+                    </h4>
+
+                    <div class="detail-group">
+                        <span class="detail-label">ФИО:</span>
+                        <span class="detail-value">
+                            @Model.Клиент.Фамилия @Model.Клиент.Имя @Model.Клиент.Отчество
+                        </span>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Телефон:</span>
+                        <span class="detail-value">
+                            <a href="tel:@Model.Клиент.Телефон" class="contact-link">
+                                @Model.Клиент.Телефон
+                            </a>
+                        </span>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">
+                            <a href="mailto:@Model.Клиент.Логин" class="contact-link">
+                                @Model.Клиент.Логин
+                            </a>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Комментарий -->
                 @if (!string.IsNullOrEmpty(Model.Заказ.ПримечаниеКЗаказу))
                 {
-                   <div class="comment-accordion">
-                       <details class="comment-details">
-                           <summary class="comment-summary">
-                               Комментарий к заказу
-                           </summary>
-                            <div class="comment-content">
-                                @Model.Заказ.ПримечаниеКЗаказу
-                            </div>
-                       </details>
-
-                   </div>
+                    <div class="comment-box">
+                        <div class="comment-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" /></svg>
+                            Комментарий к заказу
+                        </div>
+                        <div class="comment-body">
+                            @Model.Заказ.ПримечаниеКЗаказу
+                        </div>
+                    </div>
                 }
-                <h3 class="card-header-main mt-4">Данные клиента</h3>
-                <div class="detail-group">
-                    <span class="detail-label">ФИО</span>
-                    <span class="detail-value">@Model.Заказ.КодКлиентаNavigation.Фамилия @Model.Заказ.КодКлиентаNavigation.Имя @Model.Заказ.КодКлиентаNavigation.Отчество</span>
-                </div>
-                <div class="detail-group">
-                    <span class="detail-label">Телефон</span>
-                    <span class="detail-value"><a href="tel:@Model.Заказ.КодКлиентаNavigation.Телефон">@Model.Заказ.КодКлиентаNavigation.Телефон</a></span>
-                </div>
             </div>
 
+            <!-- Правая колонка: действия -->
             <div class="action-card">
+                <!-- Блок замера -->
+                <div class="card-header-main">
+                    @if (Model.Заказ.КодСтатусаЗаказа == 1)
+                    {
+                        <span class="section-header-with-icon">
+                            Назначение замерщика
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="section-header-with-icon">
+                            Информация о замере
+                        </span>
+                    }
+                </div>
+
                 @if (Model.Заказ.КодСтатусаЗаказа == 1)
                 {
-                    <h3 class="card-header-main">Назначить замерщика</h3>
-                    <form asp-controller="Manager" asp-action="AssignMeasurer">
-                       <input type="hidden" name="КодЗаказа" value="@Model.Заказ.КодЗаказа"/>
+                    <form asp-controller="Manager" asp-action="AssignMeasurer" method="post" class="measurer-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="КодЗаказа" value="@Model.Заказ.КодЗаказа" />
 
                         <div class="form-group">
-                            <label name="КодЗамерщика" class="form-label">Выбрать замерщика</label>
-                            <select name="КодЗамерщика" class="form-select">
-                                <option value="">--- Выберите замерщика ---</option>
-                                @foreach(var measurer in Model.Замерщики)
+                            <label class="form-label">Выберите замерщика</label>
+                            <select name="КодЗамерщика" class="form-input" required>
+                                <option value="">-- Выберите замерщика --</option>
+                                @foreach (var measurer in Model.Замерщики)
                                 {
                                     <option value="@measurer.КодПользователя">
-                                        @measurer.Фамилия @measurer.Имя @measurer.Отчество (@measurer.Телефон)
+                                        @measurer.Фамилия @measurer.Имя @measurer.Отчество
+                                        @if (!string.IsNullOrEmpty(measurer.Телефон))
+                                        {
+                                            <text>(@measurer.Телефон)</text>
+                                        }
                                     </option>
                                 }
                             </select>
                         </div>
+
                         <div class="form-group">
-                            <label for="ДатаЗамера" class="form-label">Предпочитаемая дата замера</label>
-                            <input type="datetime-local" id="ДатаЗамера" name="ДатаЗамера" class="form-input" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                        </div>  
-                        <button type="submit" class="login-button">Назначить</button>
+                            <label class="form-label">Дата и время замера</label>
+                            <input type="datetime-local" name="ДатаЗамера" class="form-input"
+                                   min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" required />
+                        </div>
+
+                        <button type="submit" class="main-cta-button full-width">
+                            Назначить замерщика
+                        </button>
                     </form>
                 }
-                else
+                else if (Model.ТекущийЗамер != null)
                 {
-                    <h3 class="card-header-main">Статус замера</h3>
-                    @if (Model.Заказ.Замеры.Any())
+                    var measurer = Model.ТекущийЗамер.КодЗамерщикаNavigation;
+                    if (measurer != null)
                     {
-                        var currentMeasurer = Model.Заказ.Замеры.FirstOrDefault();
-                        if (currentMeasurer != null && currentMeasurer.КодЗамерщикаNavigation != null)
-                        {
-                            <div class="info-message">
-                                <p class="info-line"><span class="info-label">Замерщик:</span> @currentMeasurer.КодЗамерщикаNavigation.Фамилия @currentMeasurer.КодЗамерщикаNavigation.Имя</p>
-                                <p class="info-line"><span class="info-label">Назначен:</span> @(currentMeasurer.ДатаЗамера?.ToString("dd.MM.yyyy HH:mm") ?? "дата не указана")</p>
+                        <div class="measurer-info">
+                            <div>
+                                <div class="measurer-name">
+                                    @measurer.Фамилия @measurer.Имя @measurer.Отчество
+                                </div>
+                                @if (!string.IsNullOrEmpty(measurer.Телефон))
+                                {
+                                    <div class="measurer-phone">
+                                        @measurer.Телефон
+                                    </div>
+                                }
                             </div>
-                        }
+                        </div>
                     }
-                    <div class="detail-group">
-                        <span class="detail-label">Текущий статус</span>
-                        <span class="detail-value status-tag status-@Model.Заказ.КодСтатусаЗаказа">@Model.Заказ.КодСтатусаЗаказаNavigation.Название</span>
+
+                    <div class="stat-item">
+                        <div class="stat-label">Дата замера</div>
+                        <div class="stat-value">
+                            @if (Model.ТекущийЗамер.ДатаЗамера.HasValue)
+                            {
+                                @Model.ТекущийЗамер.ДатаЗамера.Value.ToString("dd.MM.yyyy HH:mm")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Не указана</span>
+                            }
+                        </div>
+                    </div>
+
+
+                    <div class="">
+                        <div class="">
+                            Информация о проёмах
+                        </div>
+                    </div>
+
+
+                    @if (Model.ТекущийЗамер.ОконныеПроемы != null)
+                    {
+                        <div class="proem-header">
+                            Оконные проемы
+                        </div>
+                        <div id="proems">
+                            @foreach (var проем in Model.ТекущийЗамер.ОконныеПроемы)
+                            {
+                                <div class="proem-item">
+                                    <div class="proem-fields-row">
+                                        <div class="field-item">
+                                            <label class="form-label">Этаж</label>
+                                            <div>@проем.Этаж</div>
+                                        </div>
+                                        <div class="field-item">
+                                            <label class="form-label">Ширина, мм</label>
+                                            <div>@проем.Ширина</div>
+                                        </div>
+                                        <div class="field-item">
+                                            <label class="form-label">Высота, мм</label>
+                                            <div>@проем.Высота</div>
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(проем.Описание))
+                                    {
+                                        <div class="proem-description">
+                                            <label class="form-label">Описание</label>
+                                            <div class="proem-description-text">
+                                                @проем.Описание
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else if (Model.Заказ.КодСтатусаЗаказа > 1)
+                {
+                    <div class="empty-state-message">
+                        Информация о замере отсутствует
+                    </div>
+                }
+
+                <!-- Быстрая конфигурация -->
+                @if (canConfigure)
+                {
+                    <div class="card-header-main config-header">
+                        Конфигурация заказа
+                    </div>
+
+                    <div class="config-button-wrapper">
+                        <a asp-action="OrderConfigure" asp-controller="Manager"
+                           asp-route-id="@Model.Заказ.КодЗаказа"
+                           class="main-cta-button full-width">
+                            Настроить конфигурацию
+                        </a>
+                    </div>
+
+                    <!-- Сводка -->
+                    <div class="configuration-summary">
+                        <h4 class="summary-header">
+                            Сводка
+                        </h4>
+                        <div class="info-group">
+                            <span class="info-label">Общая сумма</span>
+                            <span class="info-value">@Model.ОбщаяСумма.ToString("N0") ₽</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">Товаров</span>
+                            <span class="info-value">@Model.ТекущиеТовары.Sum(t => t.Количество) шт.</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">Услуг</span>
+                            <span class="info-value">@Model.ТекущиеУслуги.Sum(u => u.Количество) шт.</span>
+                        </div>
                     </div>
                 }
             </div>
         </div>
+
+        <!-- Текущая конфигурация (ниже сетки) -->
+        <div class="detail-card config-section">
+            <div class="card-header-main">
+                Текущая конфигурация
+            </div>
+
+            @if (hasConfiguration)
+            {
+                <div class="config-table-wrapper">
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th class="center">Тип</th>
+                                <th class="center">Кол-во</th>
+                                <th class="center">Цена за ед.</th>
+                                <th class="right">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var товар in Model.ТекущиеТовары)
+                            {
+                                var товарInfo = товар.КодТовараNavigation;
+                                var сумма = товар.ЦенаНаМоментЗаказа * товар.Количество;
+                                var тип = товарInfo?.Окна != null ? "Окно" : "Комплектующее";
+                                var размеры = товарInfo?.Окна != null
+                                ? $"{товарInfo.Окна.Ширина}×{товарInfo.Окна.Высота} мм"
+                                : товарInfo?.Комплектующие != null
+                                ? $"{товарInfo.Комплектующие.ШиринаМм}×{товарInfo.Комплектующие.ДлинаМм} мм"
+                                : "";
+
+                                <tr>
+                                    <td>
+                                        <div class="product-name">@товарInfo?.Название</div>
+                                        @if (!string.IsNullOrEmpty(размеры))
+                                        {
+                                            <div class="product-details">@размеры</div>
+                                        }
+                                        @if (товар.ГарантияМесяцев > 0)
+                                        {
+                                            <div class="product-warranty">
+                                              
+                                                Гарантия: @товар.ГарантияМесяцев мес.
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="center">
+                                        @if (товарInfo?.Окна != null)
+                                        {
+                                            <span class="type-badge window">Окно</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="type-badge accessory">Комплектующее</span>
+                                        }
+                                    </td>
+                                    <td class="center">@товар.Количество шт.</td>
+                                    <td class="center">@товар.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                                    <td class="right bold">@сумма.ToString("N0") Р</td>
+                                </tr>
+                            }
+                            @foreach (var услуга in Model.ТекущиеУслуги)
+                            {
+                                var услугаInfo = услуга.КодУслугиNavigation;
+                                var сумма = услуга.ЦенаНаМоментЗаказа * услуга.Количество;
+
+                                <tr>
+                                    <td>
+                                        <div class="product-name">@услугаInfo?.Название</div>
+                                        @if (!string.IsNullOrEmpty(услугаInfo?.Описание))
+                                        {
+                                            <div class="product-details">@услугаInfo.Описание</div>
+                                        }
+                                    </td>
+                                    <td class="center">
+                                        <span class="type-badge service">Услуга</span>
+                                    </td>
+                                    <td class="center">@услуга.Количество шт.</td>
+                                    <td class="center">@услуга.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                                    <td class="right bold">@сумма.ToString("N0") Р</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="right bold">Товары:</td>
+                                <td class="right bold">@Model.СуммаТоваров.ToString("N0") Р</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="right bold">Услуги:</td>
+                                <td class="right bold">@Model.СуммаУслуг.ToString("N0") Р</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td colspan="4" class="right">Итого:</td>
+                                <td class="right">@Model.ОбщаяСумма.ToString("N0") Р</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-config-state">
+                  
+                    <div class="empty-config-title">Конфигурация ещё не задана</div>
+                    @if (canConfigure)
+                    {
+                        <div class="empty-config-text">
+                            Используйте форму справа для добавления товаров и услуг
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
     </div>
 </div>

@@ -9,15 +9,15 @@ public partial class Профили
 
     public string Название { get; set; } = null!;
 
-    public decimal? Ширина { get; set; }
+    public int Ширина { get; set; }
 
     public int? КоличествоКамер { get; set; }
 
-    public decimal? СопротивлениеТеплопередаче { get; set; }
+    public int? СопротивлениеТеплопередаче { get; set; }
 
-    public decimal? Звукоизоляция { get; set; }
+    public int? Звукоизоляция { get; set; }
 
-    public decimal? ТолщинаСтеклопакета { get; set; }
+    public int? ТолщинаСтеклопакета { get; set; }
 
     public virtual ICollection<Окна> Окнаs { get; set; } = new List<Окна>();
 }
