@@ -88,6 +88,12 @@
         public List<SashInfo>? Створки { get; set; }
     }
 
+    public class WindowItemDto
+    {
+        public int КодТовара {  get; set; }
+        public int Количество { get; set; }
+        public int КодПроема { get; set; }
+    }
     public class SashInfo
     {
         public int НомерСтворки { get; set; }

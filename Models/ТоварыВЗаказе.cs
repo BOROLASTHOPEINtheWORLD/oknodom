@@ -17,7 +17,7 @@ public partial class ТоварыВЗаказе
 
     public decimal ЦенаНаМоментЗаказа { get; set; }
     public int ГарантияМесяцев {  get; set; }
-    public DateOnly ГарантияДо {  get; set; }
+    public DateOnly? ГарантияДо {  get; set; }
 
     public virtual ВыполнениеМонтажа? ВыполнениеМонтажа { get; set; }
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;

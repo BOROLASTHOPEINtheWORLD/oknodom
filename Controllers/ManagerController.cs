@@ -15,57 +15,57 @@ namespace OKNODOM.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> OrderDetails(int id)
-        {
-            var order = await _context.Заказы
-                 .Include(z => z.КодКлиентаNavigation)
-                 .Include(z => z.КодСтатусаЗаказаNavigation)
-                 .Include(z => z.ТоварыВЗаказе)
-                     .ThenInclude(t => t.КодТовараNavigation)
-                         .ThenInclude(t => t.Окна) 
-                 .Include(z => z.ТоварыВЗаказе)
-                     .ThenInclude(t => t.КодТовараNavigation)
-                         .ThenInclude(t => t.Комплектующие)
-                 .Include(z => z.УслугиВЗаказе)
-                     .ThenInclude(u => u.КодУслугиNavigation)
-                 .Include(z => z.Замеры)
-                     .ThenInclude(m => m.КодЗамерщикаNavigation)
-                 .Include(z => z.Замеры)
-                     .ThenInclude(m => m.ОконныеПроемы) 
-                 .FirstOrDefaultAsync(z => z.КодЗаказа == id);
-
-            if (order == null)
+            public async Task<IActionResult> OrderDetails(int id)
             {
-                return NotFound();
-            }
+                var order = await _context.Заказы
+                     .Include(z => z.КодКлиентаNavigation)
+                     .Include(z => z.КодСтатусаЗаказаNavigation)
+                     .Include(z => z.ТоварыВЗаказе)
+                         .ThenInclude(t => t.КодТовараNavigation)
+                             .ThenInclude(t => t.Окна) 
+                     .Include(z => z.ТоварыВЗаказе)
+                         .ThenInclude(t => t.КодТовараNavigation)
+                             .ThenInclude(t => t.Комплектующие)
+                     .Include(z => z.УслугиВЗаказе)
+                         .ThenInclude(u => u.КодУслугиNavigation)
+                     .Include(z => z.Замеры)
+                         .ThenInclude(m => m.КодЗамерщикаNavigation)
+                     .Include(z => z.Замеры)
+                         .ThenInclude(m => m.ОконныеПроемы) 
+                     .FirstOrDefaultAsync(z => z.КодЗаказа == id);
 
-            var measurers = await _context.Пользователи
-                .Where(u => u.КодРоли == 3)
-                .OrderBy(u => u.Фамилия)
-                .ToListAsync();
+                if (order == null)
+                {
+                    return NotFound();
+                }
 
-            var allProducts = await _context.Товары
-                .Include(t => t.Окна)
-                .Include(t => t.Комплектующие)
-                .Where(t => t.Активный)
-                .ToListAsync();
+                var measurers = await _context.Пользователи
+                    .Where(u => u.КодРоли == 3)
+                    .OrderBy(u => u.Фамилия)
+                    .ToListAsync();
 
-            var allServices = await _context.Услуги
-                .Where(u => u.Активна)
-                .ToListAsync();
-            var viewModel = new OrderDetailsManagerViewModel
-            {
-                Заказ = order,
-                Клиент = order.КодКлиентаNavigation, 
-                Замерщики = measurers,
-                ТекущийЗамер = order.Замеры?.FirstOrDefault(),
-                ТекущиеТовары = order.ТоварыВЗаказе.ToList(),
-                ТекущиеУслуги = order.УслугиВЗаказе.ToList(),
-                Товары = allProducts, 
-                Услуги = allServices                  
-            };
+                var allProducts = await _context.Товары
+                    .Include(t => t.Окна)
+                    .Include(t => t.Комплектующие)
+                    .Where(t => t.Активный)
+                    .ToListAsync();
 
-            return View(viewModel);
+                var allServices = await _context.Услуги
+                    .Where(u => u.Активна)
+                    .ToListAsync();
+                var viewModel = new OrderDetailsManagerViewModel
+                {
+                    Заказ = order,
+                    Клиент = order.КодКлиентаNavigation, 
+                    Замерщики = measurers,
+                    ТекущийЗамер = order.Замеры?.FirstOrDefault(),
+                    ТекущиеТовары = order.ТоварыВЗаказе.ToList(),
+                    ТекущиеУслуги = order.УслугиВЗаказе.ToList(),
+                    Товары = allProducts, 
+                    Услуги = allServices                  
+                };
+
+                return View(viewModel);
         }
     
         public async Task<IActionResult> OrderConfigure(int id, string filterType = "all")
@@ -125,7 +125,8 @@ namespace OKNODOM.Controllers
 
             // === Текущая конфигурация ===
             var currentProducts = order.ТоварыВЗаказе
-                .ToDictionary(t => t.КодТовара, t => t.Количество);
+                .GroupBy(t=>t.КодТовара)
+                .ToDictionary(g=>g.Key, g => g.Sum(t=>t.Количество));
 
             var currentServices = order.УслугиВЗаказе
                 .ToDictionary(u => u.КодУслуги, u => u.Количество);
@@ -144,11 +145,11 @@ namespace OKNODOM.Controllers
             // === Текущая привязка окон к проёмам (только для окон!) ===
             var bind = order.ТоварыВЗаказе
                 .Where(t => t.КодТовараNavigation?.Окна != null) // только окна
+                .GroupBy(t => t.КодТовара) // ← ГРУППИРУЕМ
                 .ToDictionary(
-                    t => t.КодТовара,
-                    t => (int?)t.КодОконногоПроема 
-                );
-
+                    g => g.Key,
+                    g => g.FirstOrDefault(t => t.КодОконногоПроема.HasValue)?.КодОконногоПроема
+             );
             var viewModel = new OrderConfigurationViewModel
             {
                 КодЗаказа = id,
@@ -206,8 +207,10 @@ namespace OKNODOM.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> OrderConfigure(int orderId, Dictionary<int, int> products, Dictionary<int, int> services, Dictionary<int, int?> windowToOpening)
+        public async Task<IActionResult> OrderConfigure(OrderConfigurationPostModel model)
         {
+            int orderId = model.OrderId;
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -217,139 +220,189 @@ namespace OKNODOM.Controllers
                     .Include(o => o.УслугиВЗаказе)
                     .FirstOrDefaultAsync(o => o.КодЗаказа == orderId);
 
-                // === ВАЛИДАЦИЯ РАЗМЕРОВ ===
-                if (windowToOpening != null && windowToOpening.Any())
+                if (order == null)
                 {
-                    // Получаем все окна из products
-                    var windowProductIds = products?
-                        .Where(p => p.Value > 0)
-                        .Select(p => p.Key)
-                        .ToList() ?? new List<int>();
+                    TempData["ErrorMessage"] = "Заказ не найден";
+                    return RedirectToAction("OrderConfigure", new { id = orderId });
+                }
 
-                    if (windowProductIds.Any())
+                // === ПРЕОБРАЗОВАНИЕ ДАННЫХ ИЗ ФОРМЫ ===
+                // Получаем информацию о товарах из БД
+                var всеТовары = await _context.Товары
+                    .Include(t => t.Окна)
+                    .Where(t => model.Products.Keys.Contains(t.КодТовара))
+                    .ToDictionaryAsync(t => t.КодТовара);
+
+                // Создаем списки окон и комплектующих
+                var windowItems = new List<WindowItemDto>();
+                var accessories = new Dictionary<int, int>();
+                var services = model.Services;
+
+                foreach (var kvp in model.Products.Where(p => p.Value > 0))
+                {
+                    if (всеТовары.TryGetValue(kvp.Key, out var товар))
                     {
-                        // Загружаем информацию об окнах
-                        var windowsInfo = await _context.Товары
-                            .Include(t => t.Окна)
-                            .Where(t => windowProductIds.Contains(t.КодТовара) && t.Окна != null)
-                            .ToDictionaryAsync(t => t.КодТовара);
-
-                        // Загружаем информацию о проемах этого заказа
-                        var openings = await _context.Замеры
-                            .Where(z => z.КодЗаказа == orderId)
-                            .SelectMany(z => z.ОконныеПроемы)
-                            .ToDictionaryAsync(o => o.КодПроема);
-
-                        // Проверяем каждое окно
-                        foreach (var kvp in windowToOpening)
+                        if (товар.Окна != null)
                         {
-                            if (kvp.Value.HasValue) // если окно привязано к проему
+                            // Это окно - обрабатываем основные и дополнительные окна
+
+                            // 1. Основное окно (ключ: "2")
+                            string основнойКлюч = kvp.Key.ToString();
+                            if (model.WindowToOpening.TryGetValue(основнойКлюч, out var основнойПроемId) &&
+                                основнойПроемId > 0 && kvp.Value >= 1)
                             {
-                                var productId = kvp.Key;
-                                var openingId = kvp.Value.Value;
-
-                                if (windowsInfo.TryGetValue(productId, out var product) &&
-                                    product.Окна != null &&
-                                    openings.TryGetValue(openingId, out var opening))
+                                windowItems.Add(new WindowItemDto
                                 {
-                                    // Простая проверка: проем должен быть больше окна
-                                    if (product.Окна.Ширина >= opening.Ширина ||
-                                        product.Окна.Высота >= opening.Высота)
+                                    КодТовара = kvp.Key,
+                                    Количество = 1,
+                                    КодПроема = основнойПроемId
+                                });
+                            }
+
+                            // 2. Дополнительные окна (ключи: "2_2", "2_3", и т.д.)
+                            for (int i = 2; i <= kvp.Value; i++)
+                            {
+                                string дополнительныйКлюч = $"{kvp.Key}_{i}";
+                                if (model.WindowToOpening.TryGetValue(дополнительныйКлюч, out var допПроемId) &&
+                                    допПроемId > 0)
+                                {
+                                    windowItems.Add(new WindowItemDto
                                     {
-                                        TempData["ErrorMessage"] =
-                                            $"Окно '{product.Название}' ({product.Окна.Ширина}×{product.Окна.Высота} мм) " +
-                                            $"не подходит для проема {openingId} ({opening.Ширина}×{opening.Высота} мм). " +
-                                            "Проем должен быть больше окна!";
-                                        return RedirectToAction("OrderConfigure", new { id = orderId });
-                                    }
-
-                                    // Проверка минимального зазора (20 мм с каждой стороны)
-                                    int minGap = 40; // 20 мм с двух сторон = 40 мм
-
-                                    int widthGap = opening.Ширина - product.Окна.Ширина;
-                                    int heightGap = opening.Высота - product.Окна.Высота;
-
-                                    if (widthGap < minGap || heightGap < minGap)
-                                    {
-                                        TempData["WarningMessage"] =
-                                            $"Внимание! Маленький зазор у окна '{product.Название}': " +
-                                            $"ширина {widthGap} мм, высота {heightGap} мм. " +
-                                            $"Рекомендуется минимум {minGap} мм.";
-                                    }
+                                        КодТовара = kvp.Key,
+                                        Количество = 1,
+                                        КодПроема = допПроемId
+                                    });
                                 }
                             }
-                        } 
-                    } 
-                } 
-             
+                        }
+                        else
+                        {
+                            // Это комплектующее
+                            accessories[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
 
-                
-                bool hasProducts = products?.Any(p => p.Value > 0) == true;
-                bool hasServices = services?.Any(s => s.Value > 0) == true;
+                // === ВАЛИДАЦИЯ РАЗМЕРОВ ОКОН ===
+                if (windowItems.Any())
+                {
+                    var windowProductIds = windowItems
+                        .Select(w => w.КодТовара)
+                        .Distinct()
+                        .ToList();
 
-                if (!hasProducts && !hasServices)
+                    var windowsInfo = await _context.Товары
+                        .Include(t => t.Окна)
+                        .Where(t => windowProductIds.Contains(t.КодТовара) && t.Окна != null)
+                        .ToDictionaryAsync(t => t.КодТовара);
+
+                    var openings = await _context.Замеры
+                        .Where(z => z.КодЗаказа == orderId)
+                        .SelectMany(z => z.ОконныеПроемы)
+                        .ToDictionaryAsync(o => o.КодПроема);
+
+                    foreach (var item in windowItems)
+                    {
+                        var productId = item.КодТовара;
+                        var openingId = item.КодПроема;
+
+                        if (windowsInfo.TryGetValue(productId, out var product) &&
+                            product.Окна != null &&
+                            openings.TryGetValue(openingId, out var opening))
+                        {
+                            // Проверка: окно должно быть меньше проёма
+                            if (product.Окна.Ширина >= opening.Ширина ||
+                                product.Окна.Высота >= opening.Высота)
+                            {
+                                TempData["ErrorMessage"] =
+                                    $"Окно '{product.Название}' ({product.Окна.Ширина}×{product.Окна.Высота} мм) " +
+                                    $"не подходит для проема ({opening.Ширина}×{opening.Высота} мм). " +
+                                    "Проем должен быть больше окна!";
+                                return RedirectToAction("OrderConfigure", new { id = orderId });
+                            }
+
+                            // Проверка зазора
+                            int minGap = 40;
+                            int widthGap = opening.Ширина - product.Окна.Ширина;
+                            int heightGap = opening.Высота - product.Окна.Высота;
+
+                            if (widthGap < minGap || heightGap < minGap)
+                            {
+                                TempData["WarningMessage"] =
+                                    $"Внимание! Маленький зазор у окна '{product.Название}': " +
+                                    $"ширина {widthGap} мм, высота {heightGap} мм. " +
+                                    $"Рекомендуется минимум {minGap} мм.";
+                            }
+                        }
+                        else if (product?.Окна != null)
+                        {
+                            TempData["ErrorMessage"] = $"Проём {openingId} не найден для окна '{product.Название}'";
+                            return RedirectToAction("OrderConfigure", new { id = orderId });
+                        }
+                    }
+                }
+
+                bool hasWindows = windowItems.Any();
+                bool hasAccessories = accessories.Any(a => a.Value > 0);
+                bool hasServices = services.Any(s => s.Value > 0);
+
+                if (!hasWindows && !hasAccessories && !hasServices)
                 {
                     TempData["ErrorMessage"] = "Выберите хотя бы один товар или услугу";
                     return RedirectToAction("OrderConfigure", new { id = orderId });
                 }
 
+                // Удаляем старые записи
                 _context.ТоварыВЗаказе.RemoveRange(order.ТоварыВЗаказе);
                 _context.УслугиВЗаказе.RemoveRange(order.УслугиВЗаказе);
 
                 decimal totalAmount = 0;
 
-                if (hasProducts)
+                // Сохраняем окна
+                if (hasWindows)
                 {
-                    var productsWithQuantity = products.Where(p => p.Value > 0).ToDictionary();
-                    var productIds = productsWithQuantity.Keys.ToArray();
-
-                    var productsInDb = await _context.Товары
+                    var windowProductIds = windowItems.Select(w => w.КодТовара).Distinct().ToArray();
+                    var windowsInDb = await _context.Товары
                         .Include(t => t.Окна)
-                        .Where(t => productIds.Contains(t.КодТовара) && t.Активный)
+                        .Where(t => windowProductIds.Contains(t.КодТовара) && t.Активный)
                         .ToDictionaryAsync(t => t.КодТовара);
 
-                    foreach (var kvp in productsWithQuantity)
+                    // Группируем окна по товару и проёму
+                    var сгруппированныеОкна = windowItems
+                        .GroupBy(w => new { w.КодТовара, w.КодПроема })
+                        .Select(g => new
+                        {
+                            g.Key.КодТовара,
+                            g.Key.КодПроема,
+                            Количество = g.Count()
+                        });
+
+                    foreach (var группа in сгруппированныеОкна)
                     {
-                        if (productsInDb.TryGetValue(kvp.Key, out var product))
+                        if (windowsInDb.TryGetValue(группа.КодТовара, out var product))
                         {
                             decimal price = product.Цена;
-                            int quantity = kvp.Value;
-                            decimal itemTotal = price * quantity;
-                            totalAmount += itemTotal;
+                            int quantity = группа.Количество;
+                            totalAmount += price * quantity;
 
-                            // Warranty
-                            int warrantyMonths = 12;
-                            if (product.Окна != null && product.Окна.БазоваяГарантияМесяцев > 0)
-                            {
-                                warrantyMonths = product.Окна.БазоваяГарантияМесяцев;
-                            }
+                            int warrantyMonths = product.Окна?.БазоваяГарантияМесяцев ?? 12;
+                            DateOnly warrantyUntil = DateOnly.FromDateTime(DateTime.Now.AddMonths(warrantyMonths));
 
-                            DateOnly warrantyUntil = DateOnly.FromDateTime(
-                                DateTime.Now.AddMonths(warrantyMonths));
-
-                            var товарВЗаказе = new ТоварыВЗаказе
+                            _context.ТоварыВЗаказе.Add(new ТоварыВЗаказе
                             {
                                 КодЗаказа = orderId,
-                                КодТовара = kvp.Key,
+                                КодТовара = группа.КодТовара,
                                 Количество = quantity,
                                 ЦенаНаМоментЗаказа = price,
                                 ГарантияМесяцев = warrantyMonths,
-                                ГарантияДо = warrantyUntil
-                            };
-
-                            // Сохраняем привязку к проему для окон
-                            if (windowToOpening != null &&
-                                windowToOpening.TryGetValue(kvp.Key, out var openingId) &&
-                                openingId.HasValue)
-                            {
-                                товарВЗаказе.КодОконногоПроема = openingId.Value;
-                            }
-
-                            _context.ТоварыВЗаказе.Add(товарВЗаказе);
+                                ГарантияДо = warrantyUntil,
+                                КодОконногоПроема = группа.КодПроема
+                            });
                         }
                     }
                 }
 
+                // Сохраняем услуги
                 if (hasServices)
                 {
                     var servicesWithQuantity = services.Where(s => s.Value > 0).ToDictionary();
@@ -379,7 +432,36 @@ namespace OKNODOM.Controllers
                     }
                 }
 
-                // Update status and total
+                // Сохраняем комплектующие
+                if (hasAccessories)
+                {
+                    var accessoryIds = accessories.Keys.ToArray();
+                    var accessoriesInDb = await _context.Товары
+                        .Where(t => accessoryIds.Contains(t.КодТовара) && t.Активный && t.Окна == null)
+                        .ToDictionaryAsync(t => t.КодТовара);
+
+                    foreach (var kvp in accessories.Where(a => a.Value > 0))
+                    {
+                        if (accessoriesInDb.TryGetValue(kvp.Key, out var accessory))
+                        {
+                            decimal price = accessory.Цена;
+                            int quantity = kvp.Value;
+                            totalAmount += price * quantity;
+
+                            _context.ТоварыВЗаказе.Add(new ТоварыВЗаказе
+                            {
+                                КодЗаказа = orderId,
+                                КодТовара = kvp.Key,
+                                Количество = quantity,
+                                ЦенаНаМоментЗаказа = price,
+                                ГарантияМесяцев = 0,
+                                ГарантияДо = null
+                            });
+                        }
+                    }
+                }
+
+                // Обновляем статус и сумму заказа
                 order.КодСтатусаЗаказа = 8;
                 order.Стоимость = totalAmount;
 

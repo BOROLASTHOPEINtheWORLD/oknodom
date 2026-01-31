@@ -28,9 +28,9 @@ namespace OKNODOM.Controllers
         {
             return View(new LoginViewModel());
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-
         public async Task<IActionResult> Login(LoginViewModel userModel)
         {
             if(ModelState.IsValid)

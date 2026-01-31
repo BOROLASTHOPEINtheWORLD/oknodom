@@ -295,119 +295,137 @@
         </div>
 
         <!-- Текущая конфигурация (ниже сетки) -->
-        <div class="detail-card config-section">
-            <div class="card-header-main">
-                Текущая конфигурация
-            </div>
+      <div class="detail-card config-section">
+    <div class="card-header-main">
+        Текущая конфигурация
+    </div>
 
-            @if (hasConfiguration)
+    @if (hasConfiguration)
+    {
+            // Группируем товары прямо в представлении
+        var сгруппированныеТовары = Model.ТекущиеТовары
+            .GroupBy(t => t.КодТовара)
+            .Select(g => new
             {
-                <div class="config-table-wrapper">
-                    <table class="config-table">
-                        <thead>
-                            <tr>
-                                <th>Наименование</th>
-                                <th class="center">Тип</th>
-                                <th class="center">Кол-во</th>
-                                <th class="center">Цена за ед.</th>
-                                <th class="right">Сумма</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var товар in Model.ТекущиеТовары)
-                            {
-                                var товарInfo = товар.КодТовараNavigation;
-                                var сумма = товар.ЦенаНаМоментЗаказа * товар.Количество;
-                                var тип = товарInfo?.Окна != null ? "Окно" : "Комплектующее";
-                                var размеры = товарInfo?.Окна != null
-                                ? $"{товарInfo.Окна.Ширина}×{товарInfo.Окна.Высота} мм"
-                                : товарInfo?.Комплектующие != null
-                                ? $"{товарInfo.Комплектующие.ШиринаМм}×{товарInfo.Комплектующие.ДлинаМм} мм"
-                                : "";
+                Товар = g.First().КодТовараNavigation,
+                ОбщееКоличество = g.Sum(x => x.Количество),
+                ЦенаНаМоментЗаказа = g.First().ЦенаНаМоментЗаказа,
+                Детали = g.ToList(),
+                ЯвляетсяОкном = g.First().КодТовараNavigation?.Окна != null,
+                Проёмы = g.Where(d => d.КодОконногоПроема.HasValue)
+                            .Select(d => d.КодОконногоПроема.Value)
+                            .Distinct(),
+                ЕстьБезПроема = g.Any(d => !d.КодОконногоПроема.HasValue)
+            })
+            .ToList();
 
-                                <tr>
-                                    <td>
-                                        <div class="product-name">@товарInfo?.Название</div>
-                                        @if (!string.IsNullOrEmpty(размеры))
-                                        {
-                                            <div class="product-details">@размеры</div>
-                                        }
-                                        @if (товар.ГарантияМесяцев > 0)
-                                        {
-                                            <div class="product-warranty">
-                                              
-                                                Гарантия: @товар.ГарантияМесяцев мес.
-                                            </div>
-                                        }
-                                    </td>
-                                    <td class="center">
-                                        @if (товарInfo?.Окна != null)
-                                        {
-                                            <span class="type-badge window">Окно</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="type-badge accessory">Комплектующее</span>
-                                        }
-                                    </td>
-                                    <td class="center">@товар.Количество шт.</td>
-                                    <td class="center">@товар.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
-                                    <td class="right bold">@сумма.ToString("N0") Р</td>
-                                </tr>
-                            }
-                            @foreach (var услуга in Model.ТекущиеУслуги)
-                            {
-                                var услугаInfo = услуга.КодУслугиNavigation;
-                                var сумма = услуга.ЦенаНаМоментЗаказа * услуга.Количество;
-
-                                <tr>
-                                    <td>
-                                        <div class="product-name">@услугаInfo?.Название</div>
-                                        @if (!string.IsNullOrEmpty(услугаInfo?.Описание))
-                                        {
-                                            <div class="product-details">@услугаInfo.Описание</div>
-                                        }
-                                    </td>
-                                    <td class="center">
-                                        <span class="type-badge service">Услуга</span>
-                                    </td>
-                                    <td class="center">@услуга.Количество шт.</td>
-                                    <td class="center">@услуга.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
-                                    <td class="right bold">@сумма.ToString("N0") Р</td>
-                                </tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="4" class="right bold">Товары:</td>
-                                <td class="right bold">@Model.СуммаТоваров.ToString("N0") Р</td>
-                            </tr>
-                            <tr>
-                                <td colspan="4" class="right bold">Услуги:</td>
-                                <td class="right bold">@Model.СуммаУслуг.ToString("N0") Р</td>
-                            </tr>
-                            <tr class="total-row">
-                                <td colspan="4" class="right">Итого:</td>
-                                <td class="right">@Model.ОбщаяСумма.ToString("N0") Р</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <div class="empty-config-state">
-                  
-                    <div class="empty-config-title">Конфигурация ещё не задана</div>
-                    @if (canConfigure)
+        <div class="config-table-wrapper">
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th class="center">Тип</th>
+                        <th class="center">Кол-во</th>
+                        <th class="center">Цена за ед.</th>
+                        <th class="right">Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var группа in сгруппированныеТовары)
                     {
-                        <div class="empty-config-text">
-                            Используйте форму справа для добавления товаров и услуг
-                        </div>
+                        var размеры = группа.ЯвляетсяОкном
+                            ? $"{группа.Товар.Окна.Ширина}×{группа.Товар.Окна.Высота} мм"
+                            : группа.Товар.Комплектующие != null
+                                ? $"{группа.Товар.Комплектующие.ШиринаМм}×{группа.Товар.Комплектующие.ДлинаМм} мм"
+                                : "";
+                        var сумма = группа.ЦенаНаМоментЗаказа * группа.ОбщееКоличество;
+
+                        <tr>
+                            <td>
+                                <div class="product-name">@группа.Товар?.Название</div>
+                                @if (!string.IsNullOrEmpty(размеры))
+                                {
+                                    <div class="product-details">@размеры</div>
+                                }
+                                
+                                
+                                @if (группа.Детали.First().ГарантияМесяцев > 0)
+                                {
+                                    <div class="product-warranty">
+                                      
+                                        Гарантия: @группа.Детали.First().ГарантияМесяцев мес.
+                                    </div>
+                                }
+                            </td>
+                            <td class="center">
+                                @if (группа.ЯвляетсяОкном)
+                                {
+                                    <span class="type-badge window">Окно</span>
+                                }
+                                else
+                                {
+                                    <span class="type-badge accessory">Комплектующее</span>
+                                }
+                            </td>
+                            <td class="center">@группа.ОбщееКоличество шт.</td>
+                            <td class="center">@группа.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                            <td class="right bold">@сумма.ToString("N0") Р</td>
+                        </tr>
                     }
+                    
+                    @* Услуги (они уже сгруппированы в модели) *@
+                    @foreach (var услуга in Model.ТекущиеУслуги)
+                    {
+                        var услугаInfo = услуга.КодУслугиNavigation;
+                        var сумма = услуга.ЦенаНаМоментЗаказа * услуга.Количество;
+
+                        <tr>
+                            <td>
+                                <div class="product-name">@услугаInfo?.Название</div>
+                                @if (!string.IsNullOrEmpty(услугаInfo?.Описание))
+                                {
+                                    <div class="product-details">@услугаInfo.Описание</div>
+                                }
+                            </td>
+                            <td class="center">
+                                <span class="type-badge service">Услуга</span>
+                            </td>
+                            <td class="center">@услуга.Количество шт.</td>
+                            <td class="center">@услуга.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                            <td class="right bold">@сумма.ToString("N0") Р</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="right bold">Товары:</td>
+                        <td class="right bold">@Model.СуммаТоваров.ToString("N0") Р</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="right bold">Услуги:</td>
+                        <td class="right bold">@Model.СуммаУслуг.ToString("N0") Р</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="4" class="right">Итого:</td>
+                        <td class="right">@Model.ОбщаяСумма.ToString("N0") Р</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-config-state">
+            <div class="empty-config-title">Конфигурация ещё не задана</div>
+            @if (canConfigure)
+            {
+                <div class="empty-config-text">
+                    Используйте форму справа для добавления товаров и услуг
                 </div>
             }
         </div>
+    }
+</div>
 
     </div>
 </div>
