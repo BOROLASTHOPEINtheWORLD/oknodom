@@ -64,10 +64,18 @@ namespace OKNODOM.Controllers
                     Товары = allProducts, 
                     Услуги = allServices                  
                 };
+            var всеПроёмыПоТоварам = order.ТоварыВЗаказе
+                .Where(t => t.КодТовараNavigation?.Окна != null && t.КодОконногоПроема.HasValue)
+                .GroupBy(t => t.КодТовара)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => t.КодОконногоПроема.Value).ToList());
 
-                return View(viewModel);
+            ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
+
+            return View(viewModel);
         }
-    
+
         public async Task<IActionResult> OrderConfigure(int id, string filterType = "all")
         {
             // Загружаем заказ + связанные данные
@@ -80,16 +88,20 @@ namespace OKNODOM.Controllers
                     .ThenInclude(z => z.ОконныеПроемы)
                 .FirstOrDefaultAsync(o => o.КодЗаказа == id);
 
- 
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Заказ не найден";
+                return RedirectToAction("Index");
+            }
 
             // === Товары ===
             var products = await _context.Товары
                 .Include(t => t.Окна)
-                    .ThenInclude(o => o.КодПрофиляNavigation)  
+                    .ThenInclude(o => o.КодПрофиляNavigation)
                 .Include(t => t.Окна)
-                    .ThenInclude(o => o.КодСтеклопакетаNavigation)  
+                    .ThenInclude(o => o.КодСтеклопакетаNavigation)
                 .Include(t => t.Окна)
-                    .ThenInclude(o => o.Створки)      
+                    .ThenInclude(o => o.Створки)
                         .ThenInclude(s => s.КодТипаСтворкиNavigation)
                 .Include(t => t.Комплектующие)
                 .Where(t => t.Активный)
@@ -108,8 +120,6 @@ namespace OKNODOM.Controllers
                 Фото = p.Фото
             }).ToList();
 
-
-
             // === Услуги ===
             var serviceDtos = await _context.Услуги
                 .Where(u => u.Активна)
@@ -125,8 +135,8 @@ namespace OKNODOM.Controllers
 
             // === Текущая конфигурация ===
             var currentProducts = order.ТоварыВЗаказе
-                .GroupBy(t=>t.КодТовара)
-                .ToDictionary(g=>g.Key, g => g.Sum(t=>t.Количество));
+                .GroupBy(t => t.КодТовара)
+                .ToDictionary(g => g.Key, g => g.Sum(t => t.Количество));
 
             var currentServices = order.УслугиВЗаказе
                 .ToDictionary(u => u.КодУслуги, u => u.Количество);
@@ -142,14 +152,43 @@ namespace OKNODOM.Controllers
                 Описание = p.Описание ?? ""
             }).ToList() ?? new List<WindowOpeningForSelection>();
 
-            // === Текущая привязка окон к проёмам (только для окон!) ===
+            // === Текущая привязка окон к проёмам (ПЕРВЫЙ проём для каждого товара) ===
             var bind = order.ТоварыВЗаказе
-                .Where(t => t.КодТовараNavigation?.Окна != null) // только окна
-                .GroupBy(t => t.КодТовара) // ← ГРУППИРУЕМ
+                .Where(t => t.КодТовараNavigation?.Окна != null && t.КодОконногоПроема.HasValue)
+                .GroupBy(t => t.КодТовара)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.FirstOrDefault(t => t.КодОконногоПроема.HasValue)?.КодОконногоПроема
-             );
+                    g => g.FirstOrDefault()?.КодОконногоПроема ?? 0
+                );
+
+            // === ВСЕ проёмы для каждого товара (новое свойство) ===
+            var всеПроёмыПоТоварам = new Dictionary<int, List<int>>();
+
+            var окнаВЗаказе = order.ТоварыВЗаказе
+                .Where(t => t.КодТовараNavigation?.Окна != null && t.КодОконногоПроема.HasValue)
+                .OrderBy(t => t.КодТовара);
+
+            foreach (var товарВЗаказе in окнаВЗаказе)
+            {
+                var productId = товарВЗаказе.КодТовара;
+
+                if (!всеПроёмыПоТоварам.ContainsKey(productId))
+                {
+                    всеПроёмыПоТоварам[productId] = new List<int>();
+                }
+
+                // Добавляем проём столько раз, сколько повторяется этот товар
+                // (если Количество > 1, значит одинаковые окна в разных проёмах)
+                for (int i = 0; i < товарВЗаказе.Количество; i++)
+                {
+                    всеПроёмыПоТоварам[productId].Add(товарВЗаказе.КодОконногоПроема.Value);
+                }
+            }
+
+            // Также нужно учесть, что товары с Количество > 1 могут быть сохранены как одна запись
+            // В этом случае просто повторяем проём нужное количество раз
+            // (В вашем POST-методе они сохраняются отдельными записями, так что это не требуется)
+
             var viewModel = new OrderConfigurationViewModel
             {
                 КодЗаказа = id,
@@ -158,11 +197,15 @@ namespace OKNODOM.Controllers
                 ТекущиеТовары = currentProducts,
                 ТекущиеУслуги = currentServices,
                 ДоступныеПроемы = proems,
-                ПривязкаОконКПроемам = bind,
+                ПривязкаОконКПроемам = bind,          // Только первый проём для совместимости
+                ВсеПроёмыПоТоварам = всеПроёмыПоТоварам, // Все проёмы для восстановления
                 ВыбранныйФильтр = filterType
             };
 
-            return View(viewModel); 
+            // Передаем данные в ViewData для JavaScript
+            ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
+
+            return View(viewModel);
         }
 
         private string GetDimensions(Товары product)

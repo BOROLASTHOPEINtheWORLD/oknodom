@@ -10,7 +10,8 @@
         public Dictionary<int, int> ТекущиеТовары { get; set; } = new(); 
         public Dictionary<int, int> ТекущиеУслуги { get; set; } = new();
         public List<WindowOpeningForSelection> ДоступныеПроемы { get; set; } = new();
-        public Dictionary<int, int?> ПривязкаОконКПроемам { get; set; } = new();
+        public Dictionary<int, int> ПривязкаОконКПроемам { get; set; } = new();
+        public Dictionary<int, List<int>> ВсеПроёмыПоТоварам { get; set; } = new();
         public decimal ТекущаяОбщаяСумма =>
             ТекущиеТовары.Sum(t => ПолучитьЦенуТовара(t.Key) * t.Value) +
             ТекущиеУслуги.Sum(s => ПолучитьЦенуУслуги(s.Key) * s.Value);

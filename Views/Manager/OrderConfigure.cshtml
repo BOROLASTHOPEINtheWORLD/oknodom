@@ -380,199 +380,323 @@
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <script>
+        var всеПроёмыПоТоварам = @Html.Raw(Json.Serialize(ViewData["ВсеПроёмыПоТоварам"] ?? new Dictionary<int, List<int>>()));
+
+        console.log("Данные с сервера:", всеПроёмыПоТоварам);
+
         function recalculate() {
-                let total = 0;
-                document.querySelectorAll('input[name^="products["]').forEach(inp => {
-                    const q = parseInt(inp.value) || 0;
-                    const p = parseFloat(inp.dataset.price) || 0;
-                    total += q * p;
-                });
-                document.querySelectorAll('input[name^="services["]').forEach(inp => {
-                    const q = parseInt(inp.value) || 0;
-                    const p = parseFloat(inp.dataset.price) || 0;
-                    total += q * p;
-                });
-                const el = document.getElementById('totalAmount');
-                if (el) {
-                    el.textContent = new Intl.NumberFormat('ru-RU').format(total) + ' ₽';
-                }
+            let total = 0;
+            document.querySelectorAll('input[name^="products["]').forEach(inp => {
+                const q = parseInt(inp.value) || 0;
+                const p = parseFloat(inp.dataset.price) || 0;
+                total += q * p;
+            });
+            document.querySelectorAll('input[name^="services["]').forEach(inp => {
+                const q = parseInt(inp.value) || 0;
+                const p = parseFloat(inp.dataset.price) || 0;
+                total += q * p;
+            });
+            const el = document.getElementById('totalAmount');
+            if (el) {
+                el.textContent = new Intl.NumberFormat('ru-RU').format(total) + ' ₽';
             }
+        }
 
-            // === СОЗДАНИЕ ДОПОЛНИТЕЛЬНЫХ ПОЛЕЙ ДЛЯ ПРОЁМОВ ===
-            function createAdditionalOpenings(productId, currentCount) {
-                const container = document.getElementById(`openings-container-${productId}`);
-                if (!container) return;
+        // === СОЗДАНИЕ ДОПОЛНИТЕЛЬНЫХ ПОЛЕЙ С ЗНАЧЕНИЯМИ ===
+        function createAdditionalOpeningsWithValues(productId, openings) {
+            const container = document.getElementById(`openings-container-${productId}`);
+            if (!container) return;
 
-                // Удаляем старые дополнительные поля
-                const oldFields = container.querySelectorAll('.additional-opening-field');
-                oldFields.forEach(field => field.remove());
+            // Удаляем старые дополнительные поля
+            const oldFields = container.querySelectorAll('.additional-opening-field');
+            oldFields.forEach(field => field.remove());
 
-                // Добавляем новые поля (начиная со второго окна)
-                for (let i = 2; i <= currentCount; i++) {
-                    const fieldDiv = document.createElement('div');
-                    fieldDiv.className = 'additional-opening-field';
-                    fieldDiv.style.marginTop = '8px';
+            // Если проёмов больше 1, создаем поля для дополнительных окон
+            for (let i = 1; i < openings.length; i++) { // начинаем с 1 (второе окно)
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'additional-opening-field';
+                fieldDiv.style.marginTop = '8px';
 
-                    // Создаем такую же структуру, как у основного селекта
-                    const label = document.createElement('label');
-                    label.className = 'form-label';
-                    label.style.display = 'flex';
-                    label.style.alignItems = 'center';
-                    label.style.marginBottom = '4px';
-                    label.innerHTML = `Окно ${i} → Проём:`;
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.marginBottom = '4px';
+                label.innerHTML = `Окно ${i + 1} → Проём:`;
 
-                    const select = document.createElement('select');
-                    select.name = `windowToOpening[${productId}_${i}]`;
-                    select.className = 'form-input';
-                    select.style.width = '100%';
-                    select.required = true;
+                const select = document.createElement('select');
+                select.name = `windowToOpening[${productId}_${i + 1}]`;
+                select.className = 'form-input';
+                select.style.width = '100%';
+                select.required = true;
 
-                    // Добавляем опцию по умолчанию
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = '';
-                    defaultOption.textContent = '— Не выбран —';
-                    select.appendChild(defaultOption);
+                // Добавляем опцию по умолчанию
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '— Не выбран —';
+                select.appendChild(defaultOption);
 
-                    // Копируем опции из основного селекта
-                    const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
-                    if (mainSelect) {
-                        mainSelect.querySelectorAll('option').forEach((option, index) => {
-                            if (index === 0) return; // Пропускаем первую опцию (пустую)
+                // Копируем опции из основного селекта
+                const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
+                if (mainSelect) {
+                    mainSelect.querySelectorAll('option').forEach((option, index) => {
+                        if (index === 0) return;
 
-                            const newOption = document.createElement('option');
-                            newOption.value = option.value;
-                            newOption.textContent = option.textContent;
-                            select.appendChild(newOption);
-                        });
+                        const newOption = document.createElement('option');
+                        newOption.value = option.value;
+                        newOption.textContent = option.textContent;
+                        select.appendChild(newOption);
+                    });
+
+                    // Устанавливаем значение для основного селекта
+                    if (openings[0]) {
+                        mainSelect.value = openings[0];
                     }
+                }
 
-                    fieldDiv.appendChild(label);
-                    fieldDiv.appendChild(select);
-                    container.appendChild(fieldDiv);
+                // Устанавливаем значение для дополнительного селекта
+                if (openings[i]) {
+                    select.value = openings[i];
+                }
+
+                fieldDiv.appendChild(label);
+                fieldDiv.appendChild(select);
+                container.appendChild(fieldDiv);
+
+                console.log(`Создано поле для товара ${productId}, окно ${i + 1}, проём ${openings[i]}`);
+            }
+        }
+
+        // === ОБРАБОТКА ИЗМЕНЕНИЯ КОЛИЧЕСТВА ===
+        function handleQuantityChange(input) {
+            const productId = input.name.match(/products\[(\d+)\]/)?.[1];
+            if (!productId) return;
+
+            const quantity = parseInt(input.value) || 0;
+            const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
+
+            if (!mainSelect) return;
+
+            let container = document.getElementById(`openings-container-${productId}`);
+
+            // Если контейнера нет - создаём его
+            if (!container) {
+                const formGroup = mainSelect.closest('.form-group');
+                if (formGroup) {
+                    const newContainer = document.createElement('div');
+                    newContainer.id = `openings-container-${productId}`;
+                    formGroup.appendChild(newContainer);
+                    container = newContainer;
                 }
             }
 
-            // === ОБРАБОТКА ИЗМЕНЕНИЯ КОЛИЧЕСТВА ===
-            function handleQuantityChange(input) {
+            // Управляем обязательностью основного селекта
+            if (quantity > 0) {
+                mainSelect.required = true;
+
+                // Если у нас уже есть данные о проёмах с сервера, используем их
+                if (всеПроёмыПоТоварам && всеПроёмыПоТоварам[productId]) {
+                    // Убедимся что количество совпадает
+                    if (quantity === всеПроёмыПоТоварам[productId].length) {
+                        createAdditionalOpeningsWithValues(productId, всеПроёмыПоТоварам[productId]);
+                    } else {
+                        // Если не совпадает, создаем пустые поля
+                        createAdditionalOpenings(productId, quantity);
+                    }
+                } else {
+                    createAdditionalOpenings(productId, quantity);
+                }
+            } else {
+                mainSelect.required = false;
+                if (container) {
+                    container.innerHTML = '';
+                }
+            }
+
+            recalculate();
+        }
+
+        // === СТАРАЯ ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ПУСТЫХ ПОЛЕЙ ===
+        function createAdditionalOpenings(productId, currentCount) {
+            const container = document.getElementById(`openings-container-${productId}`);
+            if (!container) return;
+
+            const oldFields = container.querySelectorAll('.additional-opening-field');
+            oldFields.forEach(field => field.remove());
+
+            for (let i = 2; i <= currentCount; i++) {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'additional-opening-field';
+                fieldDiv.style.marginTop = '8px';
+
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.marginBottom = '4px';
+                label.innerHTML = `Окно ${i} → Проём:`;
+
+                const select = document.createElement('select');
+                select.name = `windowToOpening[${productId}_${i}]`;
+                select.className = 'form-input';
+                select.style.width = '100%';
+                select.required = true;
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '— Не выбран —';
+                select.appendChild(defaultOption);
+
+                const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
+                if (mainSelect) {
+                    mainSelect.querySelectorAll('option').forEach((option, index) => {
+                        if (index === 0) return;
+
+                        const newOption = document.createElement('option');
+                        newOption.value = option.value;
+                        newOption.textContent = option.textContent;
+                        select.appendChild(newOption);
+                    });
+                }
+
+                fieldDiv.appendChild(label);
+                fieldDiv.appendChild(select);
+                container.appendChild(fieldDiv);
+            }
+        }
+
+        // === ВОССТАНОВЛЕНИЕ ПРОЁМОВ ПРИ ЗАГРУЗКЕ ===
+        function restoreOpeningsOnLoad() {
+            if (!всеПроёмыПоТоварам || Object.keys(всеПроёмыПоТоварам).length === 0) {
+                console.log("Нет данных о проёмах для восстановления");
+                return;
+            }
+
+            console.log("Восстанавливаем проёмы из данных сервера...");
+
+            for (var productId in всеПроёмыПоТоварам) {
+                var openings = всеПроёмыПоТоварам[productId];
+                console.log(`Товар ${productId}: ${openings.length} проёмов`, openings);
+
+                if (!openings || openings.length <= 1) continue;
+
+                // 1. Устанавливаем количество в input
+                var quantityInput = document.querySelector(`input[name='products[${productId}]']`);
+                if (quantityInput) {
+                    quantityInput.value = openings.length;
+                    console.log(`Установлено количество: ${openings.length} для товара ${productId}`);
+                }
+
+                // 2. Находим или создаем контейнер
+                var mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
+                if (!mainSelect) {
+                    console.log(`Не найден основной селект для товара ${productId}`);
+                    continue;
+                }
+
+                var container = document.getElementById(`openings-container-${productId}`);
+                if (!container) {
+                    const formGroup = mainSelect.closest('.form-group');
+                    if (formGroup) {
+                        container = document.createElement('div');
+                        container.id = `openings-container-${productId}`;
+                        formGroup.appendChild(container);
+                        console.log(`Создан контейнер для товара ${productId}`);
+                    }
+                }
+
+                // 3. Устанавливаем основной проём
+                if (openings[0]) {
+                    mainSelect.value = openings[0];
+                    console.log(`Установлен основной проём ${openings[0]} для товара ${productId}`);
+                }
+
+                // 4. Создаем поля для дополнительных проёмов
+                createAdditionalOpeningsWithValues(productId, openings);
+            }
+        }
+
+        // === ВАЛИДАЦИЯ ===
+        function validateBeforeSubmit() {
+            const errorEl = document.getElementById('validationError');
+            errorEl.style.display = 'none';
+
+            let hasError = false;
+            let errorMessage = '';
+
+            document.querySelectorAll('input[name^="products["]').forEach(input => {
                 const productId = input.name.match(/products\[(\d+)\]/)?.[1];
                 if (!productId) return;
 
                 const quantity = parseInt(input.value) || 0;
+                if (quantity <= 0) return;
+
                 const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
-
-                if (!mainSelect) return; // Если это не окно (нет селекта проёма), выходим
-
-                let container = document.getElementById(`openings-container-${productId}`);
-
-                // Если контейнера нет - создаём его ПОСЛЕ основного селекта проёма
-                if (!container) {
-                    // Находим родительский div с классом form-group, который содержит селект
-                    const formGroup = mainSelect.closest('.form-group');
-                    if (formGroup) {
-                        const newContainer = document.createElement('div');
-                        newContainer.id = `openings-container-${productId}`;
-                        // Вставляем контейнер сразу после основного селекта
-                        formGroup.appendChild(newContainer);
-                        container = newContainer;
-                    }
+                if (mainSelect && !mainSelect.value) {
+                    hasError = true;
+                    errorMessage = 'Укажите проём для первого окна';
+                    return;
                 }
 
-                // Управляем обязательностью основного селекта
-                if (quantity > 0) {
-                    mainSelect.required = true;
-                    createAdditionalOpenings(productId, quantity);
-                } else {
-                    mainSelect.required = false;
-                    if (container) {
-                        container.innerHTML = '';
-                    }
-                }
-
-                recalculate();
-            }
-
-            // === ВАЛИДАЦИЯ ПЕРЕД ОТПРАВКОЙ ФОРМЫ ===
-            function validateBeforeSubmit() {
-                const errorEl = document.getElementById('validationError');
-                errorEl.style.display = 'none';
-
-                let hasError = false;
-                let errorMessage = '';
-
-                // Проверяем все товары
-                document.querySelectorAll('input[name^="products["]').forEach(input => {
-                    const productId = input.name.match(/products\[(\d+)\]/)?.[1];
-                    if (!productId) return;
-
-                    const quantity = parseInt(input.value) || 0;
-                    if (quantity <= 0) return;
-
-                    // Проверяем основное окно
-                    const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
-                    if (mainSelect && !mainSelect.value) {
-                        hasError = true;
-                        errorMessage = 'Укажите проём для первого окна';
-                        return;
-                    }
-
-                    // Проверяем дополнительные окна (если есть)
-                    if (quantity > 1) {
-                        for (let i = 2; i <= quantity; i++) {
-                            const additionalSelect = document.querySelector(`select[name="windowToOpening[${productId}_${i}]"]`);
-                            if (!additionalSelect || !additionalSelect.value) {
-                                hasError = true;
-                                errorMessage = `Укажите проём для окна ${i}`;
-                                return;
-                            }
+                if (quantity > 1) {
+                    for (let i = 2; i <= quantity; i++) {
+                        const additionalSelect = document.querySelector(`select[name="windowToOpening[${productId}_${i}]"]`);
+                        if (!additionalSelect || !additionalSelect.value) {
+                            hasError = true;
+                            errorMessage = `Укажите проём для окна ${i}`;
+                            return;
                         }
                     }
-                });
-
-                if (hasError) {
-                    errorEl.textContent = errorMessage;
-                    errorEl.style.display = 'block';
-                    return false;
                 }
+            });
 
-                return true;
+            if (hasError) {
+                errorEl.textContent = errorMessage;
+                errorEl.style.display = 'block';
+                return false;
             }
 
-            // === ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ===
-            document.addEventListener('DOMContentLoaded', function () {
-                // Пересчитываем сумму при загрузке
-                recalculate();
+            return true;
+        }
 
-                // Назначаем обработчики изменения количества
-                document.querySelectorAll('input[name^="products["]').forEach(input => {
-                    input.addEventListener('change', function() {
-                        handleQuantityChange(this);
-                    });
+        // === ИНИЦИАЛИЗАЦИЯ ===
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("DOM загружен, начинаем инициализацию...");
 
-                    // Инициализируем начальное состояние
-                    handleQuantityChange(input);
-                });
+            // 1. Восстанавливаем проёмы из сервера
+            restoreOpeningsOnLoad();
 
-                // Обработка кнопок "Подробнее"
-                document.addEventListener('click', function (event) {
-                    const button = event.target.closest('.toggle-details-btn');
-                    if (button) {
-                        const targetId = button.getAttribute('data-target');
-                        const el = document.getElementById(targetId);
-                        if (el) {
-                            el.style.display = el.style.display === 'none' ? 'block' : 'none';
-                        }
-                    }
+            // 2. Пересчитываем сумму
+            recalculate();
+
+            // 3. Назначаем обработчики
+            document.querySelectorAll('input[name^="products["]').forEach(input => {
+                input.addEventListener('change', function() {
+                    handleQuantityChange(this);
                 });
             });
 
-            function showAllDetails() {
-                document.querySelectorAll('[id^="window-details-"]').forEach(el => el.style.display = 'block');
-            }
+            // 4. Обработка кнопок "Подробнее"
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.toggle-details-btn');
+                if (button) {
+                    const targetId = button.getAttribute('data-target');
+                    const el = document.getElementById(targetId);
+                    if (el) {
+                        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                    }
+                }
+            });
+        });
 
-            function hideAllDetails() {
-                document.querySelectorAll('[id^="window-details-"]').forEach(el => el.style.display = 'none');
-            }
+        function showAllDetails() {
+            document.querySelectorAll('[id^="window-details-"]').forEach(el => el.style.display = 'block');
+        }
+
+        function hideAllDetails() {
+            document.querySelectorAll('[id^="window-details-"]').forEach(el => el.style.display = 'none');
+        }
     </script>
 }
