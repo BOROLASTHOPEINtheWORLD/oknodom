@@ -83,7 +83,7 @@ namespace OKNODOM.Controllers
                         return RedirectToAction("InstallerDashboard", "Account");
                     }
 
-                        return RedirectToAction("Index", "Home");
+                     return RedirectToAction("Index", "Home");
                 }
                 ModelState.AddModelError(string.Empty, "Неверный логин или пароль");
             }

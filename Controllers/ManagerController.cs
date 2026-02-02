@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.DTOs;
 using OKNODOM.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace OKNODOM.Controllers
 {
@@ -10,9 +13,11 @@ namespace OKNODOM.Controllers
     public class ManagerController : Controller
     {
         private readonly OknodomDbContext _context;
-        public ManagerController(OknodomDbContext context)
+        private readonly IWebHostEnvironment _environment;
+        public ManagerController(OknodomDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         public async Task<IActionResult> OrderDetails(int id)
@@ -22,7 +27,7 @@ namespace OKNODOM.Controllers
                 .Include(z => z.КодСтатусаЗаказаNavigation)
                 .Include(z => z.ТоварыВЗаказе)
                     .ThenInclude(t => t.КодТовараNavigation)
-                        .ThenInclude(t => t.Окна) 
+                        .ThenInclude(t => t.Окна)
                 .Include(z => z.ТоварыВЗаказе)
                     .ThenInclude(t => t.КодТовараNavigation)
                         .ThenInclude(t => t.Комплектующие)
@@ -31,7 +36,7 @@ namespace OKNODOM.Controllers
                 .Include(z => z.Замеры)
                     .ThenInclude(m => m.КодЗамерщикаNavigation)
                 .Include(z => z.Замеры)
-                    .ThenInclude(m => m.ОконныеПроемы) 
+                    .ThenInclude(m => m.ОконныеПроемы)
                 .FirstOrDefaultAsync(z => z.КодЗаказа == id);
 
             if (order == null)
@@ -66,12 +71,12 @@ namespace OKNODOM.Controllers
             var viewModel = new OrderDetailsManagerViewModel
             {
                 Заказ = order,
-                Клиент = order.КодКлиентаNavigation, 
+                Клиент = order.КодКлиентаNavigation,
                 Замерщики = measurers,
                 ТекущийЗамер = order.Замеры?.FirstOrDefault(),
                 ТекущиеТовары = order.ТоварыВЗаказе.ToList(),
                 ТекущиеУслуги = order.УслугиВЗаказе.ToList(),
-                Товары = allProducts, 
+                Товары = allProducts,
                 Услуги = allServices,
                 Бригадиры = brigadiers,
                 НазначенныеМонтажники = appointedInstallers
@@ -83,11 +88,11 @@ namespace OKNODOM.Controllers
                     g => g.Key,
                     g => g.Select(t => t.КодОконногоПроема.Value).ToList());
 
-        ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
+            ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
 
 
-        return View(viewModel);
-    }
+            return View(viewModel);
+        }
 
         public async Task<IActionResult> OrderConfigure(int id, string filterType = "all")
         {
@@ -626,7 +631,7 @@ namespace OKNODOM.Controllers
                     }
                 }
 
-                order.КодСтатусаЗаказа = 5; 
+                order.КодСтатусаЗаказа = 5;
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -640,6 +645,179 @@ namespace OKNODOM.Controllers
                 return RedirectToAction("OrderDetails", new { id = model.OrderId });
             }
         }
-    }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GenerateAct(int orderId)
+        {
+            var order = await _context.Заказы
+                .Include(z => z.КодКлиентаNavigation)
+                .FirstOrDefaultAsync(z => z.КодЗаказа == orderId);
+
+            if (order == null || order.КодСтатусаЗаказа != 8)
+            {
+                TempData["ErrorMessage"] = "Невозможно сформировать акт: заказ не найден или не в нужном статусе";
+                return RedirectToAction("OrderDetails", new { id = orderId });
+            }
+
+            // Загружаем ТОВАРЫ
+            var товары = await _context.ТоварыВЗаказе
+                .Where(t => t.КодЗаказа == orderId)
+                .Include(t => t.КодТовараNavigation)
+                .ToListAsync();
+
+            // Загружаем УСЛУГИ
+            var услуги = await _context.УслугиВЗаказе
+                .Where(u => u.КодЗаказа == orderId)
+                .Include(u => u.КодУслугиNavigation)
+                .ToListAsync();
+
+            // Группируем товары
+            var сгруппированныеТовары = товары
+                .GroupBy(t => t.КодТовара)
+                .Select(g => new
+                {
+                    Наименование = g.First().КодТовараNavigation?.Название ?? "—",
+                    ОбщееКоличество = g.Sum(x => x.Количество),
+                    ЦенаЗаЕдиницу = g.First().ЦенаНаМоментЗаказа,
+                    Сумма = g.Sum(x => x.ЦенаНаМоментЗаказа * x.Количество),
+                    ГарантияМесяцев = g.First().ГарантияМесяцев,
+                    ГарантияДо = g.First().ГарантияДо
+                })
+                .ToList();
+
+            // Формируем строки для PDF
+            var строки = new List<(string Наименование, string КоличествоИЕд, string Гарантия, decimal Сумма)>();
+
+            // Добавляем товары
+            foreach (var т in сгруппированныеТовары)
+            {
+                var гарантия = т.ГарантияМесяцев > 0
+                    ? $"{т.ГарантияМесяцев} мес." + (т.ГарантияДо.HasValue ? $" до {т.ГарантияДо.Value:dd.MM.yyyy}" : "")
+                    : "—";
+
+                строки.Add((
+                    т.Наименование,
+                    $"{т.ОбщееКоличество} шт.",
+                    гарантия,
+                    т.Сумма
+                ));
+            }
+
+            // Добавляем услуги
+            foreach (var у in услуги)
+            {
+                строки.Add((
+                    у.КодУслугиNavigation?.Название ?? "—",
+                    $"{у.Количество} шт.",
+                    "—",
+                    у.ЦенаНаМоментЗаказа * у.Количество
+                ));
+            }
+
+            var общаяСумма = строки.Sum(x => x.Сумма);
+
+            // Генерация PDF
+            QuestPDF.Settings.License = LicenseType.Community;
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(2, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(12));
+
+                    page.Header().Text("ООО «Окнодом»")
+                        .SemiBold().FontSize(14).AlignCenter();
+
+                    page.Content().Column(column =>
+                    {
+                        column.Item()
+                            .AlignCenter()
+                            .PaddingBottom(20)
+                            .Text(text => text.Span("Акт выполненных работ").Bold().FontSize(16));
+
+                        column.Item()
+                            .Element(x => x.AlignCenter().PaddingBottom(20))
+                            .Text($"Заказ №{orderId} от {order.ДатаСозданияЗаказа:dd.MM.yyyy}");
+
+                        column.Item()
+                            .Element(x => x.PaddingBottom(5))
+                            .Text($"Заказчик: {order.КодКлиентаNavigation.Фамилия} {order.КодКлиентаNavigation.Имя} {order.КодКлиентаNavigation.Отчество}");
+
+                        column.Item()
+                            .Element(x => x.PaddingBottom(20))
+                            .Text($"Адрес: {order.Адрес}");
+
+                        // Таблица
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3); // Наименование
+                                columns.ConstantColumn(70); // Кол-во
+                                columns.RelativeColumn(2); // Гарантия
+                                columns.ConstantColumn(80); // Сумма
+                            });
+
+                            // Заголовки
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text("Наименование");
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text("Кол-во");
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text("Гарантия");
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text("Сумма");
+
+                            // Строки
+                            foreach (var строка in строки)
+                            {
+                                table.Cell().Element(x => x.Border(1f).Padding(5f)).Text(строка.Наименование);
+                                table.Cell().Element(x => x.Border(1f).Padding(5f)).Text(строка.КоличествоИЕд);
+                                table.Cell().Element(x => x.Border(1f).Padding(5f)).Text(строка.Гарантия);
+                                table.Cell().Element(x => x.Border(1f).Padding(5f)).Text($"{строка.Сумма:N0} ₽");
+                            }
+                        });
+
+                        // Итоговая сумма
+                        column.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(8); // пусто
+                                columns.ConstantColumn(80); // сумма
+                            });
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text("Итого:");
+                            table.Cell().Element(x => x.Border(1f).Padding(5f)).Text($"{общаяСумма:N0} ₽");
+                        });
+
+                        column.Item().Height(50);
+                        column.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("Подпись заказчика:");
+                                col.Item().Height(20).Border(1);
+                            });
+                            row.ConstantItem(40);
+                            row.RelativeItem().Column(col =>
+                            {
+                                col.Item().Text("Подпись исполнителя:");
+                                col.Item().Height(20).Border(1);
+                            });
+                        });
+                    });
+                });
+            });
+
+            var pdfBytes = document.GeneratePdf();
+
+            var uploadFolder = Path.Combine(_environment.WebRootPath, "documents");
+            Directory.CreateDirectory(uploadFolder);
+            var fileName = $"act_order_{orderId}.pdf";
+            var filePath = Path.Combine(uploadFolder, fileName);
+            await System.IO.File.WriteAllBytesAsync(filePath, pdfBytes);
+
+            TempData["SuccessMessage"] = "Акт успешно сформирован";
+            return RedirectToAction("OrderDetails", new { id = orderId });
+        }
+    }
 }

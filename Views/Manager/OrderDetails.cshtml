@@ -204,7 +204,7 @@
                             }
                         </div>
                     </div>
-
+             
                     <!-- Отображение назначенных монтажников -->
                     @if (Model.НазначенныеМонтажники.Any())
                     {
@@ -225,6 +225,18 @@
                                 </div>
                             }
                         </div>
+                    }
+                    @if (Model.Заказ.КодСтатусаЗаказа == 8 || Model.Заказ.КодСтатусаЗаказа == 5)
+                    {
+                        <div class="card-header-main">
+                            <span class="section-header-with-icon">Акт выполненных работ</span>
+                        </div>
+                        <form asp-controller="Manager" asp-action="GenerateAct" method="post" class="measurer-form">
+                            <input type="hidden" name="orderId" value="@Model.Заказ.КодЗаказа" />
+                            <button type="submit" class="main-cta-button full-width">
+                                Сформировать акт
+                            </button>
+                        </form>
                     }
 
                     <!-- Форма назначения (показывается только если ещё не назначена) -->

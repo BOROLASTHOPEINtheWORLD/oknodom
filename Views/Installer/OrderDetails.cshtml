@@ -110,7 +110,7 @@
                                 <div class="proem-details">
                                     @if (!string.IsNullOrEmpty(pos.ПроёмЭтаж))
                                     {
-                                        // Убираем лишнюю метку "Этаж:" из значения
+ 
                                         var floorValue = pos.ПроёмЭтаж.Replace("Этаж:", "").Replace("Этаж", "").Trim();
                                         if (!string.IsNullOrEmpty(floorValue))
                                         {
