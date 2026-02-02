@@ -1,0 +1,268 @@
+﻿@model OKNODOM.DTOs.InstallerOrderDetailsViewModel
+
+@{
+    ViewData["Title"] = $"Заказ №{Model.КодЗаказа}";
+}
+
+<div class="order-details-manager-section">
+    <div class="container">
+        <div class="header-action-row">
+            <h2>Заказ №@Model.КодЗаказа</h2>
+            <a asp-action="InstallerDashboard" asp-controller="Account" class="action-btn primary">
+                ⭠ Назад к списку
+            </a>
+        </div>
+
+        <!-- Компактная информация о клиенте -->
+        <div class="client-info-card compact">
+            <div class="client-info-row">
+                <div class="info-item">
+                    <span class="info-label">Клиент:</span>
+                    <span class="info-value">@Model.ФиоКлиента</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Телефон:</span>
+                    <span class="info-value">
+                        <a href="tel:@Model.Телефон" class="phone-link">@Model.Телефон</a>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Адрес:</span>
+                    <span class="info-value">@Model.Адрес</span>
+                </div>
+            </div>
+        </div>
+        @if (Model.НазначенныеМонтажники.Any())
+        {
+            <div class="card-header-main">
+                <span class="section-header-with-icon">Назначенная бригада</span>
+            </div>
+            <div class="assigned-brigade-list">
+                @foreach (var montazhnik in Model.НазначенныеМонтажники)
+                {
+                    <div class="assigned-brigade-item">
+                        <div class="brigade-member-name">
+                            @montazhnik.Фамилия @montazhnik.Имя @(montazhnik.Отчество ?? "")
+                        </div>
+                        @if (!string.IsNullOrEmpty(montazhnik.Телефон))
+                        {
+                            <div class="brigade-member-phone">@montazhnik.Телефон</div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Сводка заказа в одну строку -->
+        <div class="summary-row">
+            <div class="summary-item">
+                <span class="summary-label">Всего позиций:</span>
+                <span class="summary-value">@Model.Позиции.Count()</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Выполнено:</span>
+                <span class="summary-value">
+                    @Model.Позиции.Count(p => p.Выполнен) из @Model.Позиции.Count()
+                </span>
+            </div>
+        </div>
+
+        <!-- Позиции для монтажа -->
+        <div class="section-header">
+            <h3>Позиции для монтажа</h3>
+        </div>
+
+        <div class="positions-list compact">
+            @if (Model.Позиции.Any())
+            {
+                @foreach (var pos in Model.Позиции)
+                {
+                    <div class="position-card">
+                        <div class="position-header compact">
+                            <div class="position-main-info">
+                                <span class="position-name">@pos.Наименование</span>
+                                @if (!string.IsNullOrEmpty(pos.Размеры))
+                                {
+                                    <span class="position-size">(@pos.Размеры)</span>
+                                }
+                            </div>
+                            @if (pos.Выполнен)
+                            {
+                                <div class="status-with-date">
+                                    <span class="status-badge completed">Завершён</span>
+                                    @if (pos.ДатаВыполнения.HasValue)
+                                    {
+                                        <span class="completion-date">@pos.ДатаВыполнения.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="status-badge pending">Ожидает</span>
+                            }
+                        </div>
+
+                        <!-- Компактная информация о проёме -->
+                        @if (!string.IsNullOrEmpty(pos.ПроёмЭтаж) || !string.IsNullOrEmpty(pos.ПроёмРазмеры))
+                        {
+                            <div class="proem-info compact">
+                                <div class="proem-title">Оконный проём:</div>
+                                <div class="proem-details">
+                                    @if (!string.IsNullOrEmpty(pos.ПроёмЭтаж))
+                                    {
+                                        // Убираем лишнюю метку "Этаж:" из значения
+                                        var floorValue = pos.ПроёмЭтаж.Replace("Этаж:", "").Replace("Этаж", "").Trim();
+                                        if (!string.IsNullOrEmpty(floorValue))
+                                        {
+                                            <span class="proem-detail">
+                                                <span class="detail-label">Этаж:</span>
+                                                <span class="detail-value">@floorValue</span>
+                                            </span>
+                                        }
+                                    }
+                                    @if (!string.IsNullOrEmpty(pos.ПроёмРазмеры))
+                                    {
+                                        <span class="proem-detail">
+                                            <span class="detail-label">Размеры:</span>
+                                            <span class="detail-value">@pos.ПроёмРазмеры</span>
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(pos.ПроёмОписание))
+                                    {
+                                        <div class="proem-description">
+                                            <span class="detail-label">Описание:</span>
+                                            <span class="detail-value">@pos.ПроёмОписание</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (pos.Выполнен)
+                        {
+                            <div class="completed-section">
+                                <div class="success-message">
+                                    <div class="message-text">
+                                        Монтаж завершён
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(pos.Фотография))
+                                    {
+                                        <div class="photo-preview existing">
+                                            <div class="photo-title">Фото монтажа:</div>
+                                            <div class="photo-wrapper">
+                                                <img src="/images/uploads/@pos.Фотография" alt="Фото монтажа" class="existing-photo" />
+                                                   
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="UploadPhoto" asp-controller="Installer" method="post" enctype="multipart/form-data"
+                                  class="upload-form compact">
+                                <input type="hidden" name="orderId" value="@Model.КодЗаказа" />
+                                <input type="hidden" name="positionId" value="@pos.КодПозиции" />
+
+                                <div class="upload-section">
+                                    <div class="upload-row">
+                                        <div class="file-input-wrapper">
+                                            <input type="file" name="photo" accept="image/*" required
+                                                   class="file-input"
+                                                   id="file-@pos.КодПозиции"
+                                                   onchange="previewImage(this, 'preview-@pos.КодПозиции')" />
+                                            <label for="file-@pos.КодПозиции" class="file-label">
+                                                Выберите фото монтажа
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="submit-btn compact">
+                                            Загрузить
+                                        </button>
+                                    </div>
+
+                                    <!-- Область предпросмотра -->
+                                    <div class="preview-area" id="preview-@pos.КодПозиции">
+                                        <div class="preview-placeholder">
+                                            <div class="preview-text">Предпросмотр появится здесь</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-text">Нет позиций для монтажа</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(input, previewId) {
+        const previewArea = document.getElementById(previewId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                // Удаляем плейсхолдер
+                previewArea.innerHTML = '';
+
+                // Создаем контейнер для превью
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'photo-preview uploaded';
+
+                const previewTitle = document.createElement('div');
+                previewTitle.className = 'photo-title';
+                previewTitle.textContent = 'Предпросмотр фото:';
+
+                const previewWrapper = document.createElement('div');
+                previewWrapper.className = 'photo-wrapper';
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Предпросмотр фото';
+                img.className = 'preview-image';
+
+                const fileName = document.createElement('div');
+                fileName.className = 'file-info';
+                fileName.textContent = 'Файл: ' + input.files[0].name;
+
+                previewWrapper.appendChild(img);
+                previewWrapper.appendChild(fileName);
+
+                previewContainer.appendChild(previewTitle);
+                previewContainer.appendChild(previewWrapper);
+
+                previewArea.appendChild(previewContainer);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            // Если файл не выбран, показываем плейсхолдер
+            previewArea.innerHTML = `
+                <div class="preview-placeholder">
+                    <div class="preview-icon"></div>
+                    <div class="preview-text">Предпросмотр появится здесь</div>
+                </div>
+            `;
+        }
+    }
+</script>
+
+<style>
+    .montazhniki-list {
+        margin: 8px 0;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #495057;
+    }
+</style>

@@ -205,14 +205,57 @@
                         </div>
                     </div>
 
-
-                    <div class="">
-                        <div class="">
-                            Информация о проёмах
+                    <!-- Отображение назначенных монтажников -->
+                    @if (Model.НазначенныеМонтажники.Any())
+                    {
+                        <div class="card-header-main">
+                            <span class="section-header-with-icon">Назначенная бригада</span>
                         </div>
-                    </div>
+                        <div class="assigned-brigade-list">
+                            @foreach (var montazhnik in Model.НазначенныеМонтажники)
+                            {
+                                <div class="assigned-brigade-item">
+                                    <div class="brigade-member-name">
+                                        @montazhnik.Фамилия @montazhnik.Имя @(montazhnik.Отчество ?? "")
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(montazhnik.Телефон))
+                                    {
+                                        <div class="brigade-member-phone">@montazhnik.Телефон</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
 
-
+                    <!-- Форма назначения (показывается только если ещё не назначена) -->
+                    @if (!Model.НазначенныеМонтажники.Any())
+                    {
+                        <div class="card-header-main">
+                            <span class="section-header-with-icon">Назначение бригады</span>
+                        </div>
+                        <form asp-controller="Manager" asp-action="AssignBrigade" method="post" class="measurer-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="OrderId" value="@Model.Заказ.КодЗаказа" />
+                            <div class="form-group">
+                                <label class="form-label">Выберите монтажников</label>
+                                <select name="BrigadierIds" class="form-input" multiple size="5" required>
+                                    @foreach (var brig in Model.Бригадиры)
+                                    {
+                                        <option value="@brig.КодПользователя">
+                                            @brig.Фамилия @brig.Имя @brig.Отчество
+                                            @if (!string.IsNullOrEmpty(brig.Телефон))
+                                            {
+                                                <text>(@brig.Телефон)</text>
+                                            }
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <button type="submit" class="main-cta-button full-width">
+                                Назначить бригаду
+                            </button>
+                        </form>
+                    }
                     @if (Model.ТекущийЗамер.ОконныеПроемы != null)
                     {
                         <div class="proem-header">
@@ -351,9 +394,13 @@
                                 
                                 @if (группа.Детали.First().ГарантияМесяцев > 0)
                                 {
+                                    var гарантияДо = группа.Детали.First().ГарантияДо;
                                     <div class="product-warranty">
-                                      
                                         Гарантия: @группа.Детали.First().ГарантияМесяцев мес.
+                                        @if (гарантияДо.HasValue)
+                                        {
+                                            <text> до @гарантияДо.Value.ToString("dd.MM.yyyy")</text>
+                                        }
                                     </div>
                                 }
                             </td>

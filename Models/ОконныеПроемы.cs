@@ -28,9 +28,6 @@ public partial class ОконныеПроемы
     [Column("этаж")]
     public int Этаж { get; set; }
 
-    [InverseProperty("КодОконногоПроемаNavigation")]
-    public virtual ICollection<ВыполнениеРабот> ВыполнениеРабот { get; set; } = new List<ВыполнениеРабот>();
-
     [ForeignKey("КодЗамера")]
     public virtual Замеры КодЗамераNavigation { get; set; } = null!;
 

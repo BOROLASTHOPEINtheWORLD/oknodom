@@ -13,7 +13,8 @@ namespace OKNODOM.DTOs
         public Пользователи Клиент { get; set; } = null!;
         public Замеры ТекущийЗамер { get; set; }
         public ВыполнениеРабот Монтаж { get; set; }
-  
+        public List<Пользователи> Бригадиры { get; set; } = new();
+        public List<Пользователи> НазначенныеМонтажники { get; set; } = new();
         public decimal СуммаТоваров => ТекущиеТовары?.Sum(t => t.ЦенаНаМоментЗаказа * t.Количество) ?? 0;
         public decimal СуммаУслуг => ТекущиеУслуги?.Sum(u => u.ЦенаНаМоментЗаказа * u.Количество) ?? 0;
         public decimal ОбщаяСумма => СуммаТоваров + СуммаУслуг;

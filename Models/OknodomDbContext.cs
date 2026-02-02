@@ -69,27 +69,31 @@ public partial class OknodomDbContext : DbContext
         {
             entity.HasKey(e => e.Код).HasName("PK__Бригады__C8AC1204C1F891E5");
 
-            entity.HasOne(d => d.КодВыполненияМонтажаNavigation).WithMany(p => p.Бригады)
+            entity.HasOne(d => d.КодВыполненияNavigation)
+                .WithMany(p => p.Бригады)
+                .HasForeignKey(d => d.КодВыполнения)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_вып__628FA481");
 
-            entity.HasOne(d => d.КодМонтажникаNavigation).WithMany(p => p.Бригады)
+            entity.HasOne(d => d.КодМонтажникаNavigation)
+                .WithMany(p => p.Бригады)
+                .HasForeignKey(d => d.КодМонтажника)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Бригады__код_мон__6383C8BA");
         });
 
         modelBuilder.Entity<ВыполнениеРабот>(entity =>
         {
-            entity.HasKey(e => e.КодВыполнения).HasName("PK__Выполнен__9AD071A2DB0E40E1");
+            entity.HasKey(e => e.КодВыполнения);
 
             entity.Property(e => e.КодВыполнения).ValueGeneratedOnAdd();
             entity.Property(e => e.ДатаВыполнения).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.КодВыполненияNavigation).WithOne(p => p.ВыполнениеРабот)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Выполнение_монтажа_Товары_в_заказе");
-
-            entity.HasOne(d => d.КодОконногоПроемаNavigation).WithMany(p => p.ВыполнениеРабот).HasConstraintName("FK__Выполнени__код_о__5CD6CB2B");
+            // Связь с ТоварыВЗаказе
+            entity.HasOne(e => e.КодТовараВЗаказеNavigation)
+                .WithMany(t => t.Выполнения)
+                .HasForeignKey(e => e.КодТовараВЗаказе)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Заказы>(entity =>

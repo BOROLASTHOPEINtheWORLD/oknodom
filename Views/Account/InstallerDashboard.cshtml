@@ -1,0 +1,84 @@
+﻿@model OKNODOM.DTOs.InstallerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Панель управления монтажника";
+}
+
+<div class="measurer-dashboard-section">
+    <div class="container">
+
+        <div class="tabs-container">
+            <div class="tabs">
+                <a asp-action="InstallerDashboard"
+                   asp-controller="Account"
+                   asp-route-tab="active"
+                   class="tab @(Model.АктивнаяВкладка == "active" ? "active" : "")">
+                    Активные заказы
+                </a>
+                <a asp-action="InstallerDashboard"
+                   asp-controller="Account"
+                   asp-route-tab="completed"
+                   class="tab @(Model.АктивнаяВкладка == "completed" ? "active" : "")">
+                    Выполненные заказы
+                </a>
+            </div>
+        </div>
+
+        <div class="order-table-wrapper">
+            @if (Model.Заказы.Any())
+            {
+                <table class="measurer-orders-table">
+                    <thead>
+                        <tr>
+                            <th>№ Заказа</th>
+                            <th>Дата заказа</th>
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Адрес</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Заказы)
+                        {
+                            <tr class="order-row">
+                                <td data-label="№Заказа">
+                                    <strong>#@order.КодЗаказа</strong>
+                                </td>
+                                <td data-label="Дата">
+                                    <div class="date">@(order.ДатаНазначения?.ToString("dd.MM.yyyy HH:mm") ?? "—")</div>
+                                </td>
+                                <td data-label="Клиент">
+                                    <div class="client-name">@order.ФиоКлиента</div>
+                                </td>
+                                <td data-label="Телефон">
+                                    <a href="tel:@order.Телефон" class="phone-link">@order.Телефон</a>
+                                </td>
+                                <td data-label="Адрес" class="address-cell">
+                                    <div class="address-text">@order.Адрес</div>
+                                </td>
+                                <td data-label="Статус">
+                                    <span class="status-tag">@order.Статус</span>
+                                </td>
+                                <td data-label="Действия">
+                                    <div class="action-buttons">
+                                        <a asp-controller="Installer" asp-action="OrderDetails" asp-route-id="@order.КодЗаказа"
+                                           class="action-btn primary">Подробнее</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-orders-message">
+                    <h3>Нет заказов</h3>
+                    <p>@(Model.АктивнаяВкладка == "active" ? "Ожидайте новых назначений" : "Вы пока ничего не выполнили")</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

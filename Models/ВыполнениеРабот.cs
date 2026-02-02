@@ -13,11 +13,8 @@ public partial class ВыполнениеРабот
     [Column("код_выполнения")]
     public int КодВыполнения { get; set; }
 
-    [Column("код_оконного_проема")]
-    public int? КодОконногоПроема { get; set; }
-
-    [Column("код_установленного_окна")]
-    public int? КодУстановленногоОкна { get; set; }
+    [Column("код_товара_в_заказе")]
+    public int? КодТовараВЗаказе { get; set; }
 
     [Column("фотография")]
     [StringLength(255)]
@@ -29,9 +26,8 @@ public partial class ВыполнениеРабот
 
     public virtual ICollection<Бригады> Бригады { get; set; } = new List<Бригады>();
 
-    [ForeignKey("КодВыполнения")]
-    public virtual ТоварыВЗаказе КодВыполненияNavigation { get; set; } = null!;
 
-    [ForeignKey("КодОконногоПроема")]
-    public virtual ОконныеПроемы? КодОконногоПроемаNavigation { get; set; }
+    [ForeignKey("КодТовараВЗаказе")]
+    public virtual ТоварыВЗаказе? КодТовараВЗаказеNavigation { get; set; }
+
 }

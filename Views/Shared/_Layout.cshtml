@@ -79,6 +79,13 @@
                                 Личный кабинет
                             </a>
                         }
+                        @if (User.IsInRole("Монтажник"))
+                        {
+                            <a class="nav-link nav-link--button @(currentController == "Account" && currentAction == "InstallerDashboard" ? "active" : "")"
+                               asp-controller="Account" asp-action="InstallerDashboard">
+                                Личный кабинет
+                            </a>
+                        }
                         <form asp-controller="Account" asp-action="Logout" class="logout-form">
                             <button type="submit" class="nav-link nav-link--button">
                                 Выход

@@ -78,6 +78,10 @@ namespace OKNODOM.Controllers
                     {
                         return RedirectToAction("MeasurerDashboard", "Account");
                     }
+                    else if(user.КодРолиNavigation.Название == "Монтажник")
+                    {
+                        return RedirectToAction("InstallerDashboard", "Account");
+                    }
 
                         return RedirectToAction("Index", "Home");
                 }
@@ -212,7 +216,68 @@ namespace OKNODOM.Controllers
             };
             return View(viewModel);
         }
-                
+
+        [Authorize(Roles = "Монтажник")]
+        public async Task<IActionResult> InstallerDashboard(string tab = "active", int? orderId = null)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // 1. Создаем базовый запрос
+            IQueryable<Бригады> query = _context.Бригады
+                .Where(b => b.КодМонтажника == userId);
+
+            // 2. Применяем фильтр по статусу
+            if (tab == "active")
+            {
+                query = query.Where(b =>
+                    b.КодВыполненияNavigation.КодТовараВЗаказеNavigation
+                     .КодЗаказаNavigation.КодСтатусаЗаказа == 5);
+            }
+            else
+            {
+                query = query.Where(b =>
+                    b.КодВыполненияNavigation.КодТовараВЗаказеNavigation
+                     .КодЗаказаNavigation.КодСтатусаЗаказа == 6);
+            }
+
+            // 3. Только ПОСЛЕ фильтрации добавляем Include
+            query = query
+                .Include(b => b.КодВыполненияNavigation)
+                    .ThenInclude(v => v.КодТовараВЗаказеNavigation)
+                        .ThenInclude(t => t.КодЗаказаNavigation)
+                            .ThenInclude(z => z.КодСтатусаЗаказаNavigation)
+                .Include(b => b.КодВыполненияNavigation)
+                    .ThenInclude(v => v.КодТовараВЗаказеNavigation)
+                        .ThenInclude(t => t.КодЗаказаNavigation)
+                            .ThenInclude(z => z.КодКлиентаNavigation);
+
+            var бригады = await query.ToListAsync();
+          
+            // Группируем по заказу (чтобы не дублировать)
+            var заказы = бригады
+                .GroupBy(b => b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказа)
+                .Select(g => g.First())
+                .Select(b => new InstallerOrderViewModel
+                {
+                    КодЗаказа = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказа,
+                    Адрес = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.Адрес,
+                    ФиоКлиента = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.КодКлиентаNavigation.Фамилия + " " +
+                                 b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.КодКлиентаNavigation.Имя + " " +
+                                  b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.КодКлиентаNavigation.Отчество,
+                    Телефон = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.КодКлиентаNavigation.Телефон,
+                    Статус = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.КодСтатусаЗаказаNavigation.Название,
+                    ДатаНазначения = b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказаNavigation.ДатаСозданияЗаказа
+                })
+                .ToList();
+
+            var viewModel = new InstallerDashboardViewModel
+            {
+                Заказы = заказы,
+                АктивнаяВкладка = tab
+            };
+
+            return View(viewModel);
+        }
 
         [HttpPost] 
         [ValidateAntiForgeryToken] 

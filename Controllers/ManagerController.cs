@@ -15,55 +15,67 @@ namespace OKNODOM.Controllers
             _context = context;
         }
 
-            public async Task<IActionResult> OrderDetails(int id)
+        public async Task<IActionResult> OrderDetails(int id)
+        {
+            var order = await _context.Заказы
+                .Include(z => z.КодКлиентаNavigation)
+                .Include(z => z.КодСтатусаЗаказаNavigation)
+                .Include(z => z.ТоварыВЗаказе)
+                    .ThenInclude(t => t.КодТовараNavigation)
+                        .ThenInclude(t => t.Окна) 
+                .Include(z => z.ТоварыВЗаказе)
+                    .ThenInclude(t => t.КодТовараNavigation)
+                        .ThenInclude(t => t.Комплектующие)
+                .Include(z => z.УслугиВЗаказе)
+                    .ThenInclude(u => u.КодУслугиNavigation)
+                .Include(z => z.Замеры)
+                    .ThenInclude(m => m.КодЗамерщикаNavigation)
+                .Include(z => z.Замеры)
+                    .ThenInclude(m => m.ОконныеПроемы) 
+                .FirstOrDefaultAsync(z => z.КодЗаказа == id);
+
+            if (order == null)
             {
-                var order = await _context.Заказы
-                     .Include(z => z.КодКлиентаNavigation)
-                     .Include(z => z.КодСтатусаЗаказаNavigation)
-                     .Include(z => z.ТоварыВЗаказе)
-                         .ThenInclude(t => t.КодТовараNavigation)
-                             .ThenInclude(t => t.Окна) 
-                     .Include(z => z.ТоварыВЗаказе)
-                         .ThenInclude(t => t.КодТовараNavigation)
-                             .ThenInclude(t => t.Комплектующие)
-                     .Include(z => z.УслугиВЗаказе)
-                         .ThenInclude(u => u.КодУслугиNavigation)
-                     .Include(z => z.Замеры)
-                         .ThenInclude(m => m.КодЗамерщикаNavigation)
-                     .Include(z => z.Замеры)
-                         .ThenInclude(m => m.ОконныеПроемы) 
-                     .FirstOrDefaultAsync(z => z.КодЗаказа == id);
+                return NotFound();
+            }
 
-                if (order == null)
-                {
-                    return NotFound();
-                }
+            var measurers = await _context.Пользователи
+                .Where(u => u.КодРоли == 3)
+                .OrderBy(u => u.Фамилия)
+                .ToListAsync();
 
-                var measurers = await _context.Пользователи
-                    .Where(u => u.КодРоли == 3)
-                    .OrderBy(u => u.Фамилия)
-                    .ToListAsync();
+            var allProducts = await _context.Товары
+                .Include(t => t.Окна)
+                .Include(t => t.Комплектующие)
+                .Where(t => t.Активный)
+                .ToListAsync();
 
-                var allProducts = await _context.Товары
-                    .Include(t => t.Окна)
-                    .Include(t => t.Комплектующие)
-                    .Where(t => t.Активный)
-                    .ToListAsync();
+            var allServices = await _context.Услуги
+                .Where(u => u.Активна)
+                .ToListAsync();
 
-                var allServices = await _context.Услуги
-                    .Where(u => u.Активна)
-                    .ToListAsync();
-                var viewModel = new OrderDetailsManagerViewModel
-                {
-                    Заказ = order,
-                    Клиент = order.КодКлиентаNavigation, 
-                    Замерщики = measurers,
-                    ТекущийЗамер = order.Замеры?.FirstOrDefault(),
-                    ТекущиеТовары = order.ТоварыВЗаказе.ToList(),
-                    ТекущиеУслуги = order.УслугиВЗаказе.ToList(),
-                    Товары = allProducts, 
-                    Услуги = allServices                  
-                };
+            var brigadiers = await _context.Пользователи
+                .Where(u => u.КодРоли == 4) // ← монтажники
+                .OrderBy(u => u.Фамилия)
+                .ToListAsync();
+            var appointedInstallers = await _context.Бригады
+                .Where(b => b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказа == id)
+                .Select(b => b.КодМонтажникаNavigation)
+                .ToListAsync();
+
+            var viewModel = new OrderDetailsManagerViewModel
+            {
+                Заказ = order,
+                Клиент = order.КодКлиентаNavigation, 
+                Замерщики = measurers,
+                ТекущийЗамер = order.Замеры?.FirstOrDefault(),
+                ТекущиеТовары = order.ТоварыВЗаказе.ToList(),
+                ТекущиеУслуги = order.УслугиВЗаказе.ToList(),
+                Товары = allProducts, 
+                Услуги = allServices,
+                Бригадиры = brigadiers,
+                НазначенныеМонтажники = appointedInstallers
+            };
             var всеПроёмыПоТоварам = order.ТоварыВЗаказе
                 .Where(t => t.КодТовараNavigation?.Окна != null && t.КодОконногоПроема.HasValue)
                 .GroupBy(t => t.КодТовара)
@@ -71,10 +83,11 @@ namespace OKNODOM.Controllers
                     g => g.Key,
                     g => g.Select(t => t.КодОконногоПроема.Value).ToList());
 
-            ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
+        ViewData["ВсеПроёмыПоТоварам"] = всеПроёмыПоТоварам;
 
-            return View(viewModel);
-        }
+
+        return View(viewModel);
+    }
 
         public async Task<IActionResult> OrderConfigure(int id, string filterType = "all")
         {
@@ -550,5 +563,83 @@ namespace OKNODOM.Controllers
             TempData["SuccessMessage"] = $"Замерщик успешно назначен на заказ №{model.КодЗаказа}";
             return RedirectToAction("OrderDetails", new { id = model.КодЗаказа });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignBrigade(AssignBrigadeModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Ошибка в данных формы";
+                return RedirectToAction("OrderDetails", new { id = model.OrderId });
+            }
+
+            var order = await _context.Заказы
+                .FirstOrDefaultAsync(z => z.КодЗаказа == model.OrderId);
+
+            var selectedInstallerIds = model.BrigadierIds.Where(id => id > 0).ToList();
+
+            if (!selectedInstallerIds.Any())
+            {
+                TempData["ErrorMessage"] = "Выберите хотя бы одного монтажника";
+                return RedirectToAction("OrderDetails", new { id = model.OrderId });
+            }
+
+            // 🔒 Проверяем, что все выбранные — реальные монтажники (роль = 4)
+            var validMontazhniki = await _context.Пользователи
+                .Where(u => u.КодРоли == 4 && selectedInstallerIds.Contains(u.КодПользователя))
+                .Select(u => u.КодПользователя)
+                .ToListAsync();
+
+            var positions = await _context.ТоварыВЗаказе
+                .Where(t => t.КодЗаказа == model.OrderId)
+                .ToListAsync();
+
+            if (!positions.Any())
+            {
+                TempData["ErrorMessage"] = "В заказе нет товаров для монтажа";
+                return RedirectToAction("OrderDetails", new { id = model.OrderId });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var pos in positions)
+                {
+                    var выполнение = new ВыполнениеРабот
+                    {
+                        КодТовараВЗаказе = pos.Код,
+                        ДатаВыполнения = null,
+                        Фотография = null
+                    };
+                    _context.ВыполнениеРабот.Add(выполнение);
+                    await _context.SaveChangesAsync(); // получаем ID
+
+                    // 👷 Назначаем ВСЕХ выбранных монтажников на это выполнение
+                    foreach (var montazhnikId in validMontazhniki)
+                    {
+                        _context.Бригады.Add(new Бригады
+                        {
+                            КодВыполнения = выполнение.КодВыполнения,
+                            КодМонтажника = montazhnikId
+                        });
+                    }
+                }
+
+                order.КодСтатусаЗаказа = 5; 
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"Бригада из {validMontazhniki.Count} человек успешно назначена на заказ №{model.OrderId}";
+                return RedirectToAction("OrderDetails", new { id = model.OrderId });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return RedirectToAction("OrderDetails", new { id = model.OrderId });
+            }
+        }
     }
+
 }

@@ -35,9 +35,6 @@ public partial class ТоварыВЗаказе
     [Column("гарантия_до")]
     public DateOnly? ГарантияДо { get; set; }
 
-    [InverseProperty("КодВыполненияNavigation")]
-    public virtual ВыполнениеРабот? ВыполнениеРабот { get; set; }
-
     [ForeignKey("КодЗаказа")]
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
 
@@ -46,4 +43,7 @@ public partial class ТоварыВЗаказе
 
     [ForeignKey("КодТовара")]
     public virtual Товары КодТовараNavigation { get; set; } = null!;
+
+    [InverseProperty("КодТовараВЗаказеNavigation")]
+    public virtual ICollection<ВыполнениеРабот> Выполнения { get; set; } = new List<ВыполнениеРабот>();
 }
