@@ -36,7 +36,7 @@ public partial class Пользователи
 
     [Column("пароль")]
     [StringLength(255)]
-    public string Пароль { get; set; } = null!;
+    public string Пароль { get; set; }
 
     [Column("паспорт")]
     [StringLength(12)]
@@ -47,7 +47,7 @@ public partial class Пользователи
     public string Телефон { get; set; } = null!;
 
     [Column("активный")]
-    public bool? Активный { get; set; }
+    public bool Активный { get; set; } = true;
 
     [InverseProperty("КодМонтажникаNavigation")]
     public virtual ICollection<Бригады> Бригады { get; set; } = new List<Бригады>();

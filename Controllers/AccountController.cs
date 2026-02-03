@@ -15,12 +15,10 @@ namespace OKNODOM.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ILogger _logger;
         private readonly OknodomDbContext _context;
 
-        public AccountController(ILogger<AccountController> logger, OknodomDbContext context)
+        public AccountController(OknodomDbContext context)
         {
-            _logger = logger;
             _context = context;
         }
       
@@ -62,34 +60,26 @@ namespace OKNODOM.Controllers
                         new ClaimsPrincipal(claimIdentity),
                         authProperties); //сохраняем в куки
 
-                    if(user.КодРолиNavigation.Название == "Клиент")
-                    {
-                        return RedirectToAction("ClientDashboard", "Account");
-                    }
-                    else if(user.КодРолиNavigation.Название == "Менеджер")
-                    {
-                        return RedirectToAction("ManagerDashboard", "Account");
-                    }
-                    else if(user.КодРолиNavigation.Название == "Админ")
-                    {
-                        return RedirectToAction("AdminDashboard", "Account");
-                    }
-                    else if(user.КодРолиNavigation.Название == "Замерщик")
-                    {
-                        return RedirectToAction("MeasurerDashboard", "Account");
-                    }
-                    else if(user.КодРолиNavigation.Название == "Монтажник")
-                    {
-                        return RedirectToAction("InstallerDashboard", "Account");
-                    }
-
-                     return RedirectToAction("Index", "Home");
+                    return RedirectToDashboard(user.КодРолиNavigation.Название);
                 }
                 ModelState.AddModelError(string.Empty, "Неверный логин или пароль");
             }
             userModel.Пароль = string.Empty;
             return View(userModel);
         }
+        private IActionResult RedirectToDashboard(string role)
+        {
+            return role switch
+            {
+                "Клиент" => RedirectToAction("ClientDashboard", "Account"),
+                "Менеджер" => RedirectToAction("ManagerDashboard", "Account"),
+                "Замерщик" => RedirectToAction("MeasurerDashboard", "Account"),
+                "Монтажник" => RedirectToAction("InstallerDashboard", "Account"),
+                "Админ" => RedirectToAction("Users", "Admin"),
+                _ => RedirectToAction("Index", "Home")
+            };
+        }
+
 
 
         [Authorize(Roles="Клиент")]

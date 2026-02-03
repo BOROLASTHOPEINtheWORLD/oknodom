@@ -1,0 +1,122 @@
+﻿@model List<OKNODOM.Models.Товары>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Товары";
+    var search = ViewBag.Search as string ?? "";
+    var typeFilter = ViewBag.TypeFilter as int? ?? 0;
+    var types = ViewBag.Types as List<OKNODOM.Models.ТипыТоваров> ?? new();
+}
+
+<div class="filters-section">
+    <form method="get" id="filterForm">
+        <div class="filter-group">
+            <label for="search">Поиск:</label>
+            <input type="text"
+                   class="search-input"
+                   id="search"
+                   name="search"
+                   value="@search"
+                   placeholder="Название" />
+        </div>
+        <div class="filter-group">
+            <label for="typeFilter">Тип:</label>
+            <select class="filter-select" id="typeFilter" name="typeFilter">
+                <option value="0" selected="@(typeFilter == 0)">Все</option>
+                @foreach (var type in types)
+                {
+                    <option value="@type.Код" selected="@(typeFilter == type.Код)">
+                        @type.Название
+                    </option>
+                }
+            </select>
+        </div>
+        <a asp-action="Products" class="action-btn primary" id="resetBtn">Сбросить</a>
+        <div style="margin-left: auto;"></div>
+        <div class="admin-header">
+            <a asp-action="EditProduct" asp-route-type="1" class="action-btn primary">+ Окно</a>
+            <a asp-action="EditProduct" asp-route-type="2" class="action-btn secondary">+ Комплектующее</a>
+        </div>
+    </form>
+</div>
+
+<div class="product-grid">
+    @foreach (var item in Model)
+    {
+        <div class="product-card">
+            <!-- Тип товара (бейдж) -->
+            <div class="type-badge @(item.КодТипаТовара == 1 ? "window" : "accessory")">
+                @(item.КодТипаТовараNavigation?.Название)
+            </div>
+
+            <!-- Название -->
+            <div class="product-name">@item.Название</div>
+
+            <!-- Цена -->
+            <div class="product-price">@item.Цена.ToString("N0") Р</div>
+
+            <!-- Цвет (если есть) -->
+            @if (!string.IsNullOrEmpty(item.Цвет))
+            {
+                <div class="product-color">Цвет: @item.Цвет</div>
+            }
+
+            <!-- Статус активности -->
+            <div class="product-status @(item.Активный ? "status-active" : "status-inactive")">
+                @(item.Активный ? "Активен" : "Неактивен")
+            </div>
+
+            <!-- Действия -->
+            <div class="product-actions">
+                <a asp-action="EditProduct" asp-route-id="@item.КодТовара"
+                   class="action-btn secondary">
+                    Редактировать
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const searchInput = document.getElementById('search');
+            const typeFilter = document.getElementById('typeFilter');
+            const resetBtn = document.getElementById('resetBtn');
+
+            let debounceTimer;
+
+            function submitFilterForm() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    filterForm.submit();
+                }, 500);
+            }
+
+            if (searchInput) {
+                let searchTimer;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(submitFilterForm, 800);
+                });
+            }
+
+            if (typeFilter) {
+                typeFilter.addEventListener('change', submitFilterForm);
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Очищаем все поля
+                    if (searchInput) searchInput.value = '';
+                    if (typeFilter) typeFilter.value = '0';
+
+                    // Отправляем форму
+                    filterForm.submit();
+                });
+            }
+        });
+    </script>
+}

@@ -2168,3 +2168,100 @@ border: 1px solid #dee2e6;
     color: #6c757d;
     font-style: italic;
 }
+
+/* =============== */
+/* Карточки товаров */
+/* =============== */
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.product-card {
+    background: var(--color-light);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+    .product-card:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+.type-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    color: white;
+    background: #6c757d; /* fallback */
+    border: 1px solid transparent;
+}
+
+    .type-badge.window {
+        background: var(--color-primary);
+        color: var(--color-dark);
+        border-color: var(--color-primary);
+    }
+
+    .type-badge.accessory {
+        background: #4caf50;
+        color: white;
+        border-color: #4caf50;
+    }
+
+.product-name {
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.product-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+.product-color {
+    font-size: 0.9rem;
+    color: var(--color-text-gray);
+    margin-bottom: 8px;
+}
+
+.product-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+    .product-status.status-active {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+
+    .product-status.status-inactive {
+        background: #fff3e0;
+        color: #e65100;
+        border: 1px solid #ffcc80;
+    }
+
+.product-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+

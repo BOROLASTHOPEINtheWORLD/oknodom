@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "_Layout";
+    var activePage = ViewData["ActivePage"] as string ?? ViewBag.ActivePage as string ?? "";
+}
+
+<div class="manager-dashboard-section">
+    <!-- Добавить этот div -->
+    <div class="container">
+        <!-- Контейнер для центрирования -->
+        <div class="admin-layout">
+            <div class="admin-sidebar">
+                <a asp-action="Users" asp-controller="Admin"
+                   class="@(activePage == "Users" ? "active" : "")">
+                    Пользователи
+                </a>
+                <a asp-action="Products" asp-controller="Admin"
+                   class="@(activePage == "Products" ? "active" : "")">
+                    Товары
+                </a>
+                <a asp-action="Services" asp-controller="Admin"
+                   class="@(activePage == "Services" ? "active" : "")">
+                    Услуги
+                </a>
+                <a asp-action="Orders" asp-controller="Admin"
+                   class="@(activePage == "Orders" ? "active" : "")">
+                    Все заказы
+                </a>
+            </div>
+
+            <div class="admin-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-layout {
+        display: flex;
+        gap: 24px;
+        margin-top: 20px;
+        color:
+    }
+
+    .admin-sidebar {
+        width: 240px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px;
+        height: fit-content;
+        flex-shrink: 0;
+    }
+
+        .admin-sidebar a {
+            display: block;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: #495057;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+            .admin-sidebar a:hover {
+                background: #e9ecef;
+            }
+
+            .admin-sidebar a.active {
+                background: #7cb342;
+                color: white;
+            }
+
+    .admin-content {
+        flex: 1;
+        min-width: 0; /* Важно для flexbox */
+        background: var(--color-beige); /* Фон как у менеджера */
+        padding: 20px;
+        border-radius: 8px;
+    }
+</style>
+
+@await RenderSectionAsync("Scripts", required: false)
