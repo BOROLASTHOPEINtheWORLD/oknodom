@@ -52,7 +52,29 @@
                 }
             </div>
         }
-
+        <!-- Услуги -->
+        @if (Model.Услуги.Any())
+        {
+            <div class="section-header">
+                <h3>Услуги</h3>
+            </div>
+            <div class="positions-list compact">
+                @foreach (var услуга in Model.Услуги)
+                {
+                    <div class="position-card">
+                        <div class="position-name">@услуга.Наименование</div>
+                        @if (!string.IsNullOrEmpty(услуга.Описание))
+                        {
+                            <div class="product-details">@услуга.Описание</div>
+                        }
+                        <div class="product-details">
+                            @услуга.Количество шт. × @услуга.Цена.ToString("N0") Р
+                        </div>
+                        <div class="status-badge completed" style="margin-top: 8px;">Услуга включена</div>
+                    </div>
+                }
+            </div>
+        }
         <!-- Сводка заказа в одну строку -->
         <div class="summary-row">
             <div class="summary-item">

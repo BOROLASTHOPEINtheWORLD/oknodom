@@ -1,7 +1,7 @@
 ﻿@model OKNODOM.DTOs.LoginViewModel
 
 @{
-    ViewData["Title"] = "Вход в личныый кабинет";
+    ViewData["Title"] = "Вход в личный кабинет";
 }
 
 <div class="login-section">
@@ -36,10 +36,28 @@
 
                 <button type="submit" class="login-button">Войти</button>
 
+                <!-- 👇 ССЫЛКА НА РЕГИСТРАЦИЮ -->
+                <div style="margin-top: 20px; text-align: center;">
+                    <a asp-action="Register" class="login-link">Нет аккаунта? Зарегистрироваться</a>
+                </div>
+
             </form>
         </div>
     </div>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+
+<style>
+    .login-link {
+        color: #0d6efd;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+</style>

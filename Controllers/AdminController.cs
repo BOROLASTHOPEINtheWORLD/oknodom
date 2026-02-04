@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.DTOs;
 using OKNODOM.Models;
+using System.Security.Claims;
+
 
 namespace OKNODOM.Controllers;
 
@@ -10,10 +12,12 @@ namespace OKNODOM.Controllers;
 public class AdminController : Controller
 {
     private readonly OknodomDbContext _context;
+    private readonly IWebHostEnvironment _environment;
 
-    public AdminController(OknodomDbContext context)
+    public AdminController(OknodomDbContext context, IWebHostEnvironment environment)
     {
         _context = context;
+        _environment = environment;
     }
 
     public async Task<IActionResult> Users(string search = "", int roleFilter = 0)
@@ -247,19 +251,12 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Users));
     }
 
-    // Список товаров
+    // === СПИСОК ТОВАРОВ ===
     public async Task<IActionResult> Products(string search = "", int typeFilter = 0)
     {
-        ViewBag.ActivePage = "Products";
-        ViewBag.Search = search;
-        ViewBag.TypeFilter = typeFilter;
-
-        var query = _context.Товары
-            .Include(t => t.КодТипаТовараNavigation)
-            .AsQueryable();
+        var query = _context.Товары.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
-
         {
             var normalized = search.Trim().ToLower();
             query = query.Where(t => t.Название.ToLower().Contains(normalized));
@@ -271,56 +268,59 @@ public class AdminController : Controller
         }
 
         var products = await query
+            .Include(t => t.КодТипаТовараNavigation)
             .OrderBy(t => t.Название)
             .ToListAsync();
 
+        ViewBag.ActivePage = "Products";
+        ViewBag.Search = search;
+        ViewBag.TypeFilter = typeFilter;
         ViewBag.Types = await _context.ТипыТоваров.ToListAsync();
+
         return View(products);
     }
 
-    // Форма создания
-    public async Task<IActionResult> CreateProduct(int type)
-    {
-        var model = new ProductEditModel { КодТипаТовара = type };
-        await LoadDropdowns(model);
-        return View(model);
-    }
-
-    // Форма редактирования
-    // Этот метод теперь обрабатывает и создание, и редактирование
+    // === ФОРМА РЕДАКТИРОВАНИЯ / СОЗДАНИЯ ===
     public async Task<IActionResult> EditProduct(int? id = null, int? type = null)
     {
+        ViewBag.ActivePage = "Products";
+        var model = new ProductEditModel();
+
         if (id.HasValue)
         {
-            // Редактирование существующего
+            // Редактирование
             var товар = await _context.Товары
                 .Include(t => t.Окна)
+                .ThenInclude(o => o.Створки)
                 .Include(t => t.Комплектующие)
                 .FirstOrDefaultAsync(t => t.КодТовара == id.Value);
 
             if (товар == null) return NotFound();
 
-            var model = new ProductEditModel
-            {
-                КодТовара = товар.КодТовара,
-                КодТипаТовара = товар.КодТипаТовара,
-                Название = товар.Название,
-                Цена = товар.Цена,
-                Цвет = товар.Цвет,
-                Фото = товар.Фото,
-                Активный = товар.Активный
-            };
+            model.КодТовара = товар.КодТовара;
+            model.КодТипаТовара = товар.КодТипаТовара;
+            model.Название = товар.Название;
+            model.Цена = товар.Цена;
+            model.Цвет = товар.Цвет;
+            model.Фото = товар.Фото;
+            model.Активный = товар.Активный;
 
-            // Заполняем поля подтипов
             if (товар.Окна != null)
             {
                 model.КодПрофиля = товар.Окна.КодПрофиля;
                 model.КодСтеклопакета = товар.Окна.КодСтеклопакета;
                 model.Ширина = товар.Окна.Ширина;
                 model.Высота = товар.Окна.Высота;
-                model.КоличествоСтворок = товар.Окна.КоличествоСтворок;
                 model.Стандартное = товар.Окна.Стандартное;
+                model.КоличествоСтворок = товар.Окна.КоличествоСтворок;
                 model.БазоваяГарантияМесяцев = товар.Окна.БазоваяГарантияМесяцев;
+
+                model.Створки = товар.Окна.Створки.Select(s => new ProductEditModel.WindowSash
+                {
+                    КодСтворки = s.КодСтворки,
+                    КодТипаСтворки = s.КодТипаСтворки,
+                    НомерСтворки = s.НомерСтворки
+                }).ToList();
             }
             else if (товар.Комплектующие != null)
             {
@@ -330,33 +330,47 @@ public class AdminController : Controller
                 model.ШиринаМм = товар.Комплектующие.ШиринаМм;
                 model.ВесКг = товар.Комплектующие.ВесКг;
             }
-
-            await LoadDropdowns(model);
-            return View(model);
         }
         else if (type.HasValue)
         {
-            // Создание нового
-            var model = new ProductEditModel { КодТипаТовара = type.Value };
-            await LoadDropdowns(model);
-            return View(model);
+            // Создание
+            model.КодТипаТовара = type.Value;
+            if (type.Value == 1) // Окно
+            {
+                model.КоличествоСтворок = 1;
+                model.Створки.Add(new ProductEditModel.WindowSash { НомерСтворки = 1 });
+            }
         }
         else
         {
             return BadRequest("Не указан ни ID, ни тип");
         }
+
+        // Загружаем справочники
+        model.Профили = await _context.Профили.ToListAsync();
+        model.Стеклопакеты = await _context.Стеклопакеты.ToListAsync();
+        model.ТипыКомплектующих = await _context.ТипыКомплектующих.ToListAsync();
+        model.Материалы = await _context.Материалы.ToListAsync();
+        model.ТипыСтворок = await _context.ТипыСтворок.ToListAsync();
+        model.ТипыТоваров = await _context.ТипыТоваров.ToListAsync();
+        ViewBag.ActivePage = "Products";
+        return View(model);
     }
 
-    // Сохранение
+    // === СОХРАНЕНИЕ ===
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveProduct(ProductEditModel model)
+    public async Task<IActionResult> SaveProduct(ProductEditModel model, IFormFile фотоФайл)
     {
-        await LoadDropdowns(model); // для повторного отображения при ошибке
-
         if (!ModelState.IsValid)
         {
-            return View(model.КодТовара.HasValue ? "EditProduct" : "CreateProduct", model);
+            model.Профили = await _context.Профили.ToListAsync();
+            model.Стеклопакеты = await _context.Стеклопакеты.ToListAsync();
+            model.ТипыКомплектующих = await _context.ТипыКомплектующих.ToListAsync();
+            model.Материалы = await _context.Материалы.ToListAsync();
+            model.ТипыСтворок = await _context.ТипыСтворок.ToListAsync();
+            model.ТипыТоваров = await _context.ТипыТоваров.ToListAsync();
+            return View("EditProduct", model);
         }
 
         if (model.КодТовара.HasValue)
@@ -364,27 +378,70 @@ public class AdminController : Controller
             // Редактирование
             var товар = await _context.Товары
                 .Include(t => t.Окна)
+                .ThenInclude(o => o.Створки)
                 .Include(t => t.Комплектующие)
                 .FirstOrDefaultAsync(t => t.КодТовара == model.КодТовара.Value);
 
             if (товар == null) return NotFound();
+            var староеФото = товар.Фото;
+            // Обновляем фото если загружено новое
+            if (фотоФайл != null && фотоФайл.Length > 0)
+            {
+                // Удаляем старое фото если оно есть
+                if (!string.IsNullOrEmpty(товар.Фото))
+                {
+                    var oldPath = Path.Combine(_environment.WebRootPath, "images", "products", товар.Фото);
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
 
-            // Обновляем основные поля
+                // Сохраняем новое фото
+                var uploadFolder = Path.Combine(_environment.WebRootPath, "images", "products");
+                Directory.CreateDirectory(uploadFolder);
+
+
+                var fileName = Path.GetFileName(фотоФайл.FileName);
+                var filePath = Path.Combine(uploadFolder, fileName);
+
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await фотоФайл.CopyToAsync(stream);
+                }
+
+                товар.Фото = fileName;
+            }
+
             товар.Название = model.Название;
             товар.Цена = model.Цена;
             товар.Цвет = model.Цвет;
             товар.Активный = model.Активный;
 
-            // Обновляем подтипы
             if (товар.Окна != null && model.КодТипаТовара == 1)
             {
                 товар.Окна.КодПрофиля = model.КодПрофиля.Value;
                 товар.Окна.КодСтеклопакета = model.КодСтеклопакета.Value;
                 товар.Окна.Ширина = model.Ширина.Value;
                 товар.Окна.Высота = model.Высота.Value;
-                товар.Окна.КоличествоСтворок = model.КоличествоСтворок.Value;
                 товар.Окна.Стандартное = model.Стандартное;
                 товар.Окна.БазоваяГарантияМесяцев = model.БазоваяГарантияМесяцев.Value;
+
+                // Удаляем старые створки
+                _context.Створки.RemoveRange(товар.Окна.Створки);
+                await _context.SaveChangesAsync(); // Сохраняем удаление
+
+                // Добавляем новые
+                foreach (var s in model.Створки)
+                {
+                    _context.Створки.Add(new Створки
+                    {
+                        КодОкна = товар.КодТовара,
+                        КодТипаСтворки = s.КодТипаСтворки,
+                        НомерСтворки = s.НомерСтворки
+                    });
+                }
             }
             else if (товар.Комплектующие != null && model.КодТипаТовара == 2)
             {
@@ -399,7 +456,7 @@ public class AdminController : Controller
         }
         else
         {
-            // Создание
+            // Создание нового товара
             var товар = new Товары
             {
                 КодТипаТовара = model.КодТипаТовара,
@@ -409,10 +466,39 @@ public class AdminController : Controller
                 Активный = model.Активный
             };
 
+            // Сохраняем фото если загружено
+            if (фотоФайл != null && фотоФайл.Length > 0)
+            {
+                var uploadFolder = Path.Combine(_environment.WebRootPath, "images", "products");
+                Directory.CreateDirectory(uploadFolder);
+
+                // Используем имя файла клиента
+                var fileName = Path.GetFileName(фотоФайл.FileName);
+                var filePath = Path.Combine(uploadFolder, fileName);
+
+                // Делаем имя файла уникальным если такой уже существует
+                var counter = 1;
+                var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                var extension = Path.GetExtension(fileName);
+
+                while (System.IO.File.Exists(filePath))
+                {
+                    fileName = $"{nameWithoutExt}_{counter}{extension}";
+                    filePath = Path.Combine(uploadFolder, fileName);
+                    counter++;
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await фотоФайл.CopyToAsync(stream);
+                }
+
+                товар.Фото = fileName;
+            }
+
             _context.Товары.Add(товар);
             await _context.SaveChangesAsync(); // Получаем ID
 
-            // Создаем подтип
             if (model.КодТипаТовара == 1) // Окно
             {
                 var окно = new Окна
@@ -422,11 +508,22 @@ public class AdminController : Controller
                     КодСтеклопакета = model.КодСтеклопакета.Value,
                     Ширина = model.Ширина.Value,
                     Высота = model.Высота.Value,
-                    КоличествоСтворок = model.КоличествоСтворок.Value,
                     Стандартное = model.Стандартное,
                     БазоваяГарантияМесяцев = model.БазоваяГарантияМесяцев.Value
                 };
                 _context.Окна.Add(окно);
+                await _context.SaveChangesAsync();
+
+                // Добавляем створки
+                foreach (var s in model.Створки)
+                {
+                    _context.Створки.Add(new Створки
+                    {
+                        КодОкна = товар.КодТовара,
+                        КодТипаСтворки = s.КодТипаСтворки,
+                        НомерСтворки = s.НомерСтворки
+                    });
+                }
             }
             else if (model.КодТипаТовара == 2) // Комплектующее
             {
@@ -447,14 +544,221 @@ public class AdminController : Controller
         TempData["SuccessMessage"] = model.КодТовара.HasValue ? "Товар обновлён" : "Товар добавлен";
         return RedirectToAction(nameof(Products));
     }
-
-    // Загрузка справочников
-    private async Task LoadDropdowns(ProductEditModel model)
+    public async Task<IActionResult> Services()
     {
-        ViewBag.Types = await _context.ТипыТоваров.ToListAsync();
-        ViewBag.Profiles = await _context.Профили.ToListAsync();
-        ViewBag.GlassUnits = await _context.Стеклопакеты.ToListAsync();
-        ViewBag.AccessoryTypes = await _context.ТипыКомплектующих.ToListAsync();
-        ViewBag.Materials = await _context.Материалы.ToListAsync();
+        ViewBag.ActivePage = "Services";
+        var services = await _context.Услуги
+            .Include(u => u.КодТипаУслугиNavigation)
+            .OrderBy(u => u.Название)
+            .ToListAsync();
+        return View(services);
+    }
+
+    // Форма создания/редактирования
+    public async Task<IActionResult> EditService(int? id = null)
+    {
+        ViewBag.ActivePage = "Services";
+        var model = new ServiceEditModel();
+        model.ТипыУслуг = await _context.ТипыУслуг.ToListAsync();
+
+        if (id.HasValue)
+        {
+            var service = await _context.Услуги.FindAsync(id.Value);
+            if (service == null) return NotFound();
+
+            model.КодУслуги = service.КодУслуги;
+            model.Название = service.Название;
+            model.БазоваяСтоимость = service.БазоваяСтоимость;
+            model.КодТипаУслуги = service.КодТипаУслуги;
+            model.Описание = service.Описание;
+            model.Активна = service.Активна;
+        }
+
+        return View(model);
+    }
+
+    // Сохранение
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveService(ServiceEditModel model)
+    {
+        model.ТипыУслуг = await _context.ТипыУслуг.ToListAsync();
+
+        if (!ModelState.IsValid)
+        {
+            return View("EditService", model);
+        }
+
+        if (model.КодУслуги.HasValue)
+        {
+            // Редактирование
+            var service = await _context.Услуги.FindAsync(model.КодУслуги.Value);
+            if (service == null) return NotFound();
+
+            service.Название = model.Название;
+            service.БазоваяСтоимость = model.БазоваяСтоимость;
+            service.КодТипаУслуги = model.КодТипаУслуги;
+            service.Описание = model.Описание;
+            service.Активна = model.Активна;
+
+            _context.Update(service);
+        }
+        else
+        {
+            // Создание
+            var service = new Услуги
+            {
+                Название = model.Название,
+                БазоваяСтоимость = model.БазоваяСтоимость,
+                КодТипаУслуги = model.КодТипаУслуги,
+                Описание = model.Описание,
+                Активна = model.Активна
+            };
+            _context.Услуги.Add(service);
+        }
+
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = model.КодУслуги.HasValue ? "Услуга обновлена" : "Услуга добавлена";
+        return RedirectToAction(nameof(Services));
+    }
+    public async Task<IActionResult> Orders(string search = "", int statusFilter = 0, string sortFilter = "newest")
+    {
+        var allStatuses = await _context.СтатусыЗаказа.ToListAsync();
+        IQueryable<Заказы> orderQuery = _context.Заказы
+                .Include(z => z.КодКлиентаNavigation)
+                .Include(z => z.КодСтатусаЗаказаNavigation);
+        if (statusFilter > 0)
+        {
+            orderQuery = orderQuery.Where(z => z.КодСтатусаЗаказа == statusFilter);
+        }
+        // Фильтр по поиску (адрес или ФИО)
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.ToLower().Trim();
+            orderQuery = orderQuery.Where(z =>
+                z.Адрес.ToLower().Contains(search) ||
+                z.КодКлиентаNavigation.Фамилия.ToLower().Contains(search) ||
+                z.КодКлиентаNavigation.Имя.ToLower().Contains(search) ||
+                z.КодКлиентаNavigation.Отчество.ToLower().Contains(search) ||
+                (z.КодКлиентаNavigation.Фамилия + " " +
+                 z.КодКлиентаNavigation.Имя + " " +
+                 z.КодКлиентаNavigation.Отчество).ToLower().Contains(search));
+        }
+        switch (sortFilter)
+        {
+            case "newest":
+                orderQuery = orderQuery.OrderByDescending(z => z.ДатаСозданияЗаказа);
+                break;
+            case "oldest":
+            default:
+                orderQuery = orderQuery.OrderBy(z => z.ДатаСозданияЗаказа);
+                break;
+        }
+
+        var orders = await orderQuery.ToListAsync();
+
+        var viewModel = new ManagerDashboardViewModel
+        {
+            Заказы = orders,
+            ВсеСтатусы = allStatuses.OrderBy(s => s.КодСтатусаЗаказа),
+            ВыбранныйСтатусКод = statusFilter,
+            Сортировка = sortFilter,
+            Поиск = search
+
+        };
+        ViewBag.ActivePage = "Orders";
+        return View(viewModel);
+    }
+
+    // В AdminController.cs
+    public async Task<IActionResult> OrderDetails(int id)
+    {
+        var order = await _context.Заказы
+            .Include(z => z.КодКлиентаNavigation)
+            .Include(z => z.КодСтатусаЗаказаNavigation)
+            .FirstOrDefaultAsync(z => z.КодЗаказа == id);
+
+        if (order == null) return NotFound();
+
+        // Загружаем позиции товаров
+        var позицииТоваров = await _context.ТоварыВЗаказе
+            .Where(t => t.КодЗаказа == id)
+            .Include(t => t.КодТовараNavigation)
+                .ThenInclude(tov => tov.Окна)
+            .Include(t => t.КодОконногоПроемаNavigation)
+            .Include(t => t.Выполнения)
+            .ToListAsync();
+
+        var услуги = await _context.УслугиВЗаказе
+            .Where(u => u.КодЗаказа == id)
+            .Include(u => u.КодУслугиNavigation)
+            .ToListAsync();
+
+        var замер = await _context.Замеры
+            .Include(z => z.КодЗамерщикаNavigation)
+            .Include(z => z.ОконныеПроемы)
+            .FirstOrDefaultAsync(z => z.КодЗаказа == id);
+
+        var назначенныеМонтажники = await _context.Бригады
+            .Where(b => b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказа == id)
+            .Select(b => b.КодМонтажникаNavigation)
+            .Distinct()
+            .ToListAsync();
+
+        // Считаем суммы
+        var суммаТоваров = позицииТоваров.Sum(t => t.ЦенаНаМоментЗаказа * t.Количество);
+        var суммаУслуг = услуги.Sum(u => u.ЦенаНаМоментЗаказа * u.Количество);
+        var общаяСумма = суммаТоваров + суммаУслуг;
+
+        // Преобразуем позиции для монтажа
+        var позицииМонтажа = позицииТоваров.Select(t => new ПозицияМонтажа
+        {
+            КодПозиции = t.Код,
+            Наименование = t.КодТовараNavigation?.Название ?? "—",
+            Размеры = t.КодТовараNavigation?.Окна != null
+                ? $"{t.КодТовараNavigation.Окна.Ширина}×{t.КодТовараNavigation.Окна.Высота} мм"
+                : "",
+            ПроёмЭтаж = t.КодОконногоПроемаNavigation != null
+                ? $"Этаж: {t.КодОконногоПроемаNavigation.Этаж}"
+                : null,
+            ПроёмРазмеры = t.КодОконногоПроемаNavigation != null
+                ? $"{t.КодОконногоПроемаNavigation.Ширина}×{t.КодОконногоПроемаNavigation.Высота} мм"
+                : null,
+            ПроёмОписание = t.КодОконногоПроемаNavigation?.Описание,
+            ДатаВыполнения = t.Выполнения.FirstOrDefault()?.ДатаВыполнения,
+            Выполнен = t.Выполнения.Any(v => v.Фотография != null),
+            Фотография = t.Выполнения.FirstOrDefault()?.Фотография,
+            КодВыполнения = t.Выполнения.FirstOrDefault()?.КодВыполнения ?? 0
+        }).ToList();
+
+        // Получаем списки пользователей
+        var замерщики = await _context.Пользователи
+            .Where(u => u.КодРоли == 3 && u.Активный) // Роль замерщика
+            .ToListAsync();
+
+        var бригадиры = await _context.Пользователи
+            .Where(u => u.КодРоли == 4 && u.Активный) // Роль монтажника/бригадира
+            .ToListAsync();
+
+        // Создаем ViewModel
+        var viewModel = new AdminOrderDetailsViewModel
+        {
+            Заказ = order,
+            Клиент = order.КодКлиентаNavigation,
+            ТекущийЗамер = замер,
+            ТекущиеТовары = позицииТоваров,
+            ТекущиеУслуги = услуги,
+            Позиции = позицииМонтажа,
+            НазначенныеМонтажники = назначенныеМонтажники,
+            Замерщики = замерщики,
+            Бригадиры = бригадиры,
+            СуммаТоваров = суммаТоваров,
+            СуммаУслуг = суммаУслуг,
+            ОбщаяСумма = общаяСумма,
+            
+        };
+
+        ViewBag.ActivePage = "Orders";
+        return View(viewModel);
     }
 }

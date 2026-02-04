@@ -1,0 +1,71 @@
+﻿@model OKNODOM.DTOs.ServiceEditModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = Model.КодУслуги.HasValue ? "Редактировать услугу" : "Добавить услугу";
+}
+
+<div class="header-action-row">
+    <h3>@ViewData["Title"]</h3>
+    <a asp-action="Services" class="action-btn primary">← Назад к списку</a>
+</div>
+
+<div class="order-details-manager-section">
+    <form asp-action="SaveService" method="post" class="product-form" style="max-width: 800px; margin: 0 auto;">
+        @Html.AntiForgeryToken()
+        @if (Model.КодУслуги.HasValue)
+        {
+            <input type="hidden" asp-for="КодУслуги" />
+        }
+
+        <div class="detail-card" style="margin-bottom: 20px;">
+            <div class="card-header-main">
+                <span>Основная информация</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label class="form-label" asp-for="Название">Название *</label>
+                <input asp-for="Название" class="form-input full-width" required placeholder="Введите название услуги" />
+                <span asp-validation-for="Название" class="text-danger"></span>
+            </div>
+
+            <div class="form-row" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" asp-for="БазоваяСтоимость">Стоимость *</label>
+                    <input asp-for="БазоваяСтоимость" type="number" step="100" class="form-input" required placeholder="0.00" />
+                    <span asp-validation-for="БазоваяСтоимость" class="text-danger"></span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" asp-for="КодТипаУслуги">Тип услуги *</label>
+                    <select asp-for="КодТипаУслуги" class="form-input" required>
+                        <option value="">-- Выберите тип --</option>
+                        @foreach (var t in Model.ТипыУслуг)
+                        {
+                            <option value="@t.КодТипаУслуги">@t.Название</option>
+                        }
+                    </select>
+                    <span asp-validation-for="КодТипаУслуги" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label class="form-label" asp-for="Описание">Описание</label>
+                <textarea asp-for="Описание" class="form-input" rows="3"></textarea>
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input asp-for="Активна" type="checkbox" class="checkbox-input" />
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-text">Активная услуга</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-actions" style="display: flex; gap: 16px; padding-top: 24px; margin-top: 32px; border-top: 1px solid #e1e5eb;">
+            <button type="submit" class="action-btn primary" style="padding: 12px 30px;">
+                @(Model.КодУслуги.HasValue ? "Сохранить изменения" : "Добавить услугу")
+            </button>
+            <a asp-action="Services" class="action-btn secondary" style="padding: 12px 30px;">Отмена</a>
+        </div>
+    </form>
+</div>

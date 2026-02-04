@@ -10,12 +10,18 @@ namespace OKNODOM.DTOs
         public string Телефон { get; set; } = string.Empty;
 
         public bool ЗаказЗавершён { get; set; }
-        
+        public List<УслугаМонтажа> Услуги { get; set; } = new();
         public List<Пользователи> НазначенныеМонтажники { get; set; } = new();
 
         public List<ПозицияМонтажа> Позиции { get; set; } = new();
     }
-
+    public class УслугаМонтажа
+    {
+        public string Наименование { get; set; } = null!;
+        public string? Описание { get; set; }
+        public int Количество { get; set; }
+        public decimal Цена { get; set; }
+    }
     public class ПозицияМонтажа
     {
         public int КодПозиции { get; set; }

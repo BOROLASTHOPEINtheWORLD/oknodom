@@ -1,5 +1,64 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<OKNODOM.Models.Услуги>
 @{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Услуги";
 }
+
+<div class="admin-header">
+    <a asp-action="EditService" class="action-btn primary">+ Добавить услугу</a>
+</div>
+
+<div class="product-grid">
+    @foreach (var item in Model)
+    {
+        <div class="product-card">
+            <!-- Тип услуги (бейдж) -->
+            <div class="type-badge accessory">
+                @(item.КодТипаУслугиNavigation?.Название ?? "—")
+            </div>
+
+            <!-- Название -->
+            <div class="product-name">@item.Название</div>
+
+            <!-- Цена -->
+            <div class="product-price">@item.БазоваяСтоимость.ToString("N0") Р</div>
+
+            <!-- Описание -->
+            @if (!string.IsNullOrEmpty(item.Описание))
+            {
+                <div class="product-color">@item.Описание</div>
+            }
+
+            <!-- Статус активности -->
+            <div class="product-status @(item.Активна ? "status-active" : "status-inactive")">
+                @(item.Активна ? "Активна" : "Неактивна")
+            </div>
+
+            <!-- Действия -->
+            <div class="product-actions">
+                <a asp-action="EditService" asp-route-id="@item.КодУслуги"
+                   class="action-btn secondary">
+                    Редактировать
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    /* Используем стили от товаров */
+    .type-badge.accessory {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-active {
+        color: #198754;
+        font-weight: 600;
+    }
+
+    .status-inactive {
+        color: #dc3545;
+        font-weight: 600;
+    }
+</style>

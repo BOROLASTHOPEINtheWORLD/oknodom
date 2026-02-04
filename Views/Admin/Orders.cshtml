@@ -1,5 +1,124 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model OKNODOM.DTOs.ManagerDashboardViewModel
 @{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Все заказы";
+}
+
+<div class="measurer-dashboard-section">
+    <div class="container">
+
+        <!-- Фильтры (как у менеджера) -->
+        <div class="filters-section" style="margin-bottom: 20px;">
+            <form method="get" id="filterForm">
+                <div class="filter-group">
+                    <label for="search">Поиск:</label>
+                    <input type="text" class="search-input" id="search" name="search" value="@Model.Поиск" placeholder="Адрес или ФИО" />
+                </div>
+                <div class="filter-group">
+                    <label for="statusFilter">Статус:</label>
+                    <select class="filter-select" id="statusFilter" name="statusFilter">
+                        <option value="0">Все заявки</option>
+                        @foreach (var status in Model.ВсеСтатусы)
+                        {
+                            <option value="@status.КодСтатусаЗаказа" selected="@(Model.ВыбранныйСтатусКод == status.КодСтатусаЗаказа)">
+                                @status.Название
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Сортировка:</label>
+                    <select class="filter-select" id="sortFilter" name="sortFilter">
+                        <option value="newest" selected="@(Model.Сортировка == "newest")">Сначала новые</option>
+                        <option value="oldest" selected="@(Model.Сортировка == "oldest")">Сначала старые</option>
+                    </select>
+                </div>
+                <a asp-action="Orders" class="action-btn primary">Сбросить</a>
+            </form>
+        </div>
+
+        <!-- Таблица заказов -->
+        <div class="order-table-wrapper">
+            @if (Model.Заказы.Any())
+            {
+                <table class="measurer-orders-table">
+                    <thead>
+                        <tr>
+                            <th>№ Заказа</th>
+                            <th>Дата заказа</th>
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Адрес</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Заказы)
+                        {
+                            <tr class="order-row">
+                                <td data-label="№Заказа">
+                                    <strong>#@order.КодЗаказа</strong>
+                                </td>
+                                <td data-label="Дата">
+                                    <div class="date">@order.ДатаСозданияЗаказа.ToString("dd.MM.yyyy HH:mm")</div>
+                                </td>
+                                <td data-label="Клиент">
+                                    <div class="client-name">
+                                        @(order.КодКлиентаNavigation?.Фамилия)
+                                        @(order.КодКлиентаNavigation?.Имя)
+                                    </div>
+                                </td>
+                                <td data-label="Телефон">
+                                    @if (!string.IsNullOrEmpty(order.КодКлиентаNavigation?.Телефон))
+                                    {
+                                        <a href="tel:@order.КодКлиентаNavigation.Телефон" class="phone-link">
+                                            @order.КодКлиентаNavigation.Телефон
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span>—</span>
+                                    }
+                                </td>
+                                <td data-label="Адрес" class="address-cell">
+                                    <div class="address-text">@order.Адрес</div>
+                                </td>
+                                <td data-label="Статус">
+                                    <span class="status-tag">@order.КодСтатусаЗаказаNavigation?.Название</span>
+                                </td>
+                                <td data-label="Действия">
+                                    <div class="action-buttons">
+                                        <a asp-controller="Admin" asp-action="OrderDetails" asp-route-id="@order.КодЗаказа"
+                                           class="action-btn primary">Подробнее</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-orders-message">
+                    <h3>Нет заказов</h3>
+                    <p>Не найдено заказов по заданным критериям.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('filterForm').addEventListener('input', function(e) {
+            if (e.target.id === 'search') {
+                clearTimeout(window.searchTimer);
+                window.searchTimer = setTimeout(() => this.submit(), 500);
+            }
+        });
+        document.getElementById('filterForm').addEventListener('change', function() {
+            this.submit();
+        });
+    </script>
 }

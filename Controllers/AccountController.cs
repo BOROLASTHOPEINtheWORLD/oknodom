@@ -79,8 +79,52 @@ namespace OKNODOM.Controllers
                 _ => RedirectToAction("Index", "Home")
             };
         }
+        public IActionResult Register()
+        {
+            return View();
+        }
 
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            if (await _context.Пользователи.AnyAsync(u => u.Логин == model.Логин))
+            {
+                ModelState.AddModelError("Логин", "Пользователь с таким логином уже существует");
+                return View(model);
+            }
+
+            if (await _context.Пользователи.AnyAsync(u => u.Телефон == model.Телефон))
+            {
+                ModelState.AddModelError("Телефон", "Пользователь с таким телефоном уже существует");
+                return View(model);
+            }
+
+            var user = new Пользователи
+            {
+                КодРоли = 1, // клиент
+                Фамилия = model.Фамилия,
+                Имя = model.Имя,
+                Отчество = model.Отчество,
+                Логин = model.Логин,
+                Пароль = model.Пароль, 
+                Телефон = model.Телефон,
+                Активный = true
+            };
+
+            _context.Пользователи.Add(user);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Регистрация прошла успешно! Теперь вы можете войти.";
+            return RedirectToAction("Login");
+        }
 
         [Authorize(Roles="Клиент")]
         public async Task<IActionResult> ClientDashboard()
@@ -104,7 +148,6 @@ namespace OKNODOM.Controllers
                 
             return View(user);
         }
-
         [Authorize(Roles = "Менеджер")]
         public async Task<IActionResult> ManagerDashboard(int statusFilter, string sortFilter="newest", string search = "")
         {
@@ -156,7 +199,7 @@ namespace OKNODOM.Controllers
         }
 
         [Authorize(Roles = "Замерщик")]
-        public async Task<IActionResult> MeasurerDashboard(DateTime? dateFrom = null, DateTime? dateTo = null, string tab = "active")
+        public async Task<IActionResult> MeasurerDashboard(string tab = "active")
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var activeQuery = _context.Замеры
@@ -168,17 +211,6 @@ namespace OKNODOM.Controllers
                 .Where(z => z.КодЗамерщика == userId
                         && z.КодЗаказаNavigation.КодСтатусаЗаказа > 2);
 
-            if (dateFrom.HasValue)
-            {
-                activeQuery = activeQuery.Where(z => z.ДатаЗамера >= dateFrom.Value);
-                completedQuery = completedQuery.Where(z => z.ДатаЗамера >= dateFrom.Value);
-            }
-            if (dateTo.HasValue)
-            {
-                var endOfDays = dateTo.Value.AddDays(1);
-                activeQuery = activeQuery.Where(z => z.ДатаЗамера < endOfDays);
-                completedQuery = completedQuery.Where(z=>z.ДатаЗамера < endOfDays);
-            }
 
             IQueryable<Замеры> currentQuery = tab == "active" ? activeQuery : completedQuery;
 
@@ -200,8 +232,6 @@ namespace OKNODOM.Controllers
             var viewModel = new MeasurerDashboardViewModel
             {
                 Заказы = orders,
-                ДатаС = dateFrom,
-                ДатаПо = dateTo,
                 АктивнаяВкладка = tab
             };
             return View(viewModel);

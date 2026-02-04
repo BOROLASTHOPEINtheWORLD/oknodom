@@ -1,0 +1,87 @@
+﻿@model OKNODOM.DTOs.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Регистрация клиента";
+}
+
+<div class="login-section">
+    <div>
+        <div class="login-box">
+            <h2 class="login-title">Регистрация</h2>
+
+            <form asp-action="Register" class="login-form">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Фамилия" class="form-label">Фамилия *</label>
+                        <input asp-for="Фамилия" class="form-input" />
+                        <span asp-validation-for="Фамилия" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Имя" class="form-label">Имя *</label>
+                        <input asp-for="Имя" class="form-input" />
+                        <span asp-validation-for="Имя" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Отчество" class="form-label">Отчество</label>
+                    <input asp-for="Отчество" class="form-input" placeholder="Не обязательно" />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Логин" class="form-label">Логин *</label>
+                    <input asp-for="Логин" class="form-input" />
+                    <span asp-validation-for="Логин" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Пароль" class="form-label">Пароль *</label>
+                    <input asp-for="Пароль" type="password" class="form-input" />
+                    <span asp-validation-for="Пароль" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ПодтверждениеПароля" class="form-label">Подтверждение пароля *</label>
+                    <input asp-for="ПодтверждениеПароля" type="password" class="form-input" />
+                    <span asp-validation-for="ПодтверждениеПароля" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Телефон" class="form-label">Телефон *</label>
+                    <input asp-for="Телефон" class="form-input" />
+                    <span asp-validation-for="Телефон" class="text-danger"></span>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <button type="submit" class="login-button">Зарегистрироваться</button>
+
+                <div style="margin-top: 16px; text-align: center;">
+                    <a asp-action="Login" style="color: #0d6efd;">Уже есть аккаунт? Войти</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .form-row {
+        display: flex;
+        gap: 16px;
+    }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+    @@media (max-width: 600px) {
+        .form-row {
+            flex-direction: column;
+        }
+    }
+</style>

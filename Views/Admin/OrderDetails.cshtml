@@ -1,0 +1,445 @@
+﻿@model OKNODOM.DTOs.AdminOrderDetailsViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = $"Заказ №{Model.Заказ.КодЗаказа}";
+}
+
+<div class="order-details-manager-section">
+    <div class="container">
+
+        <!-- Шапка с навигацией -->
+        <div class="header-action-row">
+            <h2>Детали по заказу №@Model.Заказ.КодЗаказа</h2>
+            <a asp-action="Orders" asp-controller="Admin" class="action-btn primary">
+                ⭠ Назад к списку
+            </a>
+        </div>
+
+        <!-- Уведомления -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert-success">
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-error">
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
+        }
+
+        <!-- Основная сетка: 2/3 контент, 1/3 действия -->
+        <div class="order-details-grid">
+
+            <!-- Левая колонка: детали заказа -->
+            <div class="detail-card">
+                <div class="card-header-main">
+                    <span class="order-card-title">
+                        Заказ №@Model.Заказ.КодЗаказа
+                    </span>
+                    @if (Model.Заказ.КодСтатусаЗаказаNavigation != null)
+                    {
+                        <span class="order-status">
+                            @Model.Заказ.КодСтатусаЗаказаNavigation.Название
+                        </span>
+                    }
+                </div>
+
+                <!-- Основная информация -->
+                <div class="detail-group">
+                    <span class="detail-label">Дата создания:</span>
+                    <span class="detail-value">@Model.Заказ.ДатаСозданияЗаказа.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Адрес установки:</span>
+                    <span class="detail-value">@Model.Заказ.Адрес</span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Общая сумма:</span>
+                    <span class="detail-value">
+                        @Model.ОбщаяСумма.ToString("N0") Р
+                    </span>
+                </div>
+                <div class="detail-group">
+                    <span class="detail-label">Статус оплаты:</span>
+                    <span class="detail-value">
+                        @if (Model.Заказ.СтатусОплаты)
+                        {
+                            <span class="payment-badge paid">Оплачен</span>
+                        }
+                        else
+                        {
+                            <span class="payment-badge unpaid">Не оплачен</span>
+                        }
+                    </span>
+                </div>
+
+                <!-- Информация о клиенте -->
+                <div class="mt-4">
+                    <h4 class="client-section-header">
+                        Информация о клиенте
+                    </h4>
+
+                    <div class="detail-group">
+                        <span class="detail-label">ФИО:</span>
+                        <span class="detail-value">
+                            @Model.Клиент.Фамилия @Model.Клиент.Имя @Model.Клиент.Отчество
+                        </span>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Телефон:</span>
+                        <span class="detail-value">
+                            <a href="tel:@Model.Клиент.Телефон" class="contact-link">
+                                @Model.Клиент.Телефон
+                            </a>
+                        </span>
+                    </div>
+                    <div class="detail-group">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">
+                            <a href="mailto:@Model.Клиент.Логин" class="contact-link">
+                                @Model.Клиент.Логин
+                            </a>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Комментарий -->
+                @if (!string.IsNullOrEmpty(Model.Заказ.ПримечаниеКЗаказу))
+                {
+                    <div class="comment-box">
+                        <div class="comment-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" /></svg>
+                            Комментарий к заказу
+                        </div>
+                        <div class="comment-body">
+                            @Model.Заказ.ПримечаниеКЗаказу
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Правая колонка: информация о замере -->
+            <div class="action-card">
+                <div class="card-header-main">
+                    <span class="section-header-with-icon">
+                        Информация о замере
+                    </span>
+                </div>
+
+                @if (Model.ТекущийЗамер != null)
+                {
+                    var measurer = Model.ТекущийЗамер.КодЗамерщикаNavigation;
+                    if (measurer != null)
+                    {
+                        <div class="measurer-info">
+                            <div>
+                                <div class="measurer-name">
+                                    Замерщик: @measurer.Фамилия @measurer.Имя @measurer.Отчество
+                                </div>
+                                @if (!string.IsNullOrEmpty(measurer.Телефон))
+                                {
+                                    <div class="measurer-phone">
+                                        @measurer.Телефон
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="stat-item">
+                        <div class="stat-label">Дата замера</div>
+                        <div class="stat-value">
+                            @if (Model.ТекущийЗамер.ДатаЗамера.HasValue)
+                            {
+                                @Model.ТекущийЗамер.ДатаЗамера.Value.ToString("dd.MM.yyyy HH:mm")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Не указана</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Назначенные монтажники -->
+                    @if (Model.НазначенныеМонтажники.Any())
+                    {
+                        <div class="card-header-main">
+                            <span class="section-header-with-icon">Назначенная бригада</span>
+                        </div>
+                        <div class="assigned-brigade-list">
+                            @foreach (var montazhnik in Model.НазначенныеМонтажники)
+                            {
+                                <div class="assigned-brigade-item">
+                                    <div class="brigade-member-name">
+                                        @montazhnik.Фамилия @montazhnik.Имя @(montazhnik.Отчество ?? "")
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(montazhnik.Телефон))
+                                    {
+                                        <div class="brigade-member-phone">@montazhnik.Телефон</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="info-message">
+                            Бригада не назначена
+                        </div>
+                    }
+                }
+                else if (Model.Заказ.КодСтатусаЗаказа > 1)
+                {
+                    <div class="empty-state-message">
+                        Информация о замере отсутствует
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Текущая конфигурация -->
+        <div class="detail-card config-section mt-4">
+            <div class="card-header-main">
+                Текущая конфигурация
+            </div>
+
+            @{
+                var hasConfiguration = Model.ТекущиеТовары.Any() || Model.ТекущиеУслуги.Any();
+            }
+
+            @if (hasConfiguration)
+            {
+                // Группируем товары
+                var сгруппированныеТовары = Model.ТекущиеТовары
+                .GroupBy(t => t.КодТовара)
+                .Select(g => new
+                {
+                    Товар = g.First().КодТовараNavigation,
+                    ОбщееКоличество = g.Sum(x => x.Количество),
+                    ЦенаНаМоментЗаказа = g.First().ЦенаНаМоментЗаказа,
+                    ЯвляетсяОкном = g.First().КодТовараNavigation?.Окна != null
+                })
+                .ToList();
+
+                <div class="config-table-wrapper">
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th>Наименование</th>
+                                <th class="center">Тип</th>
+                                <th class="center">Кол-во</th>
+                                <th class="center">Цена за ед.</th>
+                                <th class="right">Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var группа in сгруппированныеТовары)
+                            {
+                                var размеры = группа.ЯвляетсяОкном && группа.Товар.Окна != null
+                                ? $"{группа.Товар.Окна.Ширина}×{группа.Товар.Окна.Высота} мм"
+                                : группа.Товар.Комплектующие != null
+                                ? $"{группа.Товар.Комплектующие.ШиринаМм}×{группа.Товар.Комплектующие.ДлинаМм} мм"
+                                : "";
+                                var сумма = группа.ЦенаНаМоментЗаказа * группа.ОбщееКоличество;
+
+                                <tr>
+                                    <td>
+                                        <div class="product-name">@группа.Товар?.Название</div>
+                                        @if (!string.IsNullOrEmpty(размеры))
+                                        {
+                                            <div class="product-details">@размеры</div>
+                                        }
+                                    </td>
+                                    <td class="center">
+                                        @if (группа.ЯвляетсяОкном)
+                                        {
+                                            <span class="type-badge window">Окно</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="type-badge accessory">Комплектующее</span>
+                                        }
+                                    </td>
+                                    <td class="center">@группа.ОбщееКоличество шт.</td>
+                                    <td class="center">@группа.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                                    <td class="right bold">@сумма.ToString("N0") Р</td>
+                                </tr>
+                            }
+
+                            <!-- Услуги -->
+                            @foreach (var услуга in Model.ТекущиеУслуги)
+                            {
+                                var услугаInfo = услуга.КодУслугиNavigation;
+                                var сумма = услуга.ЦенаНаМоментЗаказа * услуга.Количество;
+
+                                <tr>
+                                    <td>
+                                        <div class="product-name">@услугаInfo?.Название</div>
+                                        @if (!string.IsNullOrEmpty(услугаInfo?.Описание))
+                                        {
+                                            <div class="product-details">@услугаInfo.Описание</div>
+                                        }
+                                    </td>
+                                    <td class="center">
+                                        <span class="type-badge service">Услуга</span>
+                                    </td>
+                                    <td class="center">@услуга.Количество шт.</td>
+                                    <td class="center">@услуга.ЦенаНаМоментЗаказа.ToString("N0") Р</td>
+                                    <td class="right bold">@сумма.ToString("N0") Р</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="right bold">Товары:</td>
+                                <td class="right bold">@Model.СуммаТоваров.ToString("N0") Р</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="right bold">Услуги:</td>
+                                <td class="right bold">@Model.СуммаУслуг.ToString("N0") Р</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td colspan="4" class="right">Итого:</td>
+                                <td class="right">@Model.ОбщаяСумма.ToString("N0") Р</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-config-state">
+                    <div class="empty-config-title">Конфигурация ещё не задана</div>
+                </div>
+            }
+        </div>
+
+        <!-- Позиции для монтажа -->
+        <div class="mt-4">
+            <div class="section-header">
+                <h3>Позиции для монтажа</h3>
+            </div>
+
+            <div class="positions-list compact">
+                @if (Model.Позиции.Any())
+                {
+                    @foreach (var pos in Model.Позиции)
+                    {
+                        <div class="position-card">
+                            <div class="position-header compact">
+                                <div class="position-main-info">
+                                    <span class="position-name">@pos.Наименование</span>
+                                    @if (!string.IsNullOrEmpty(pos.Размеры))
+                                    {
+                                        <span class="position-size">(@pos.Размеры)</span>
+                                    }
+                                </div>
+                                @if (pos.Выполнен)
+                                {
+                                    <div class="status-with-date">
+                                        <span class="status-badge completed">Завершён</span>
+                                        @if (pos.ДатаВыполнения.HasValue)
+                                        {
+                                            <span class="completion-date">@pos.ДатаВыполнения.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="status-badge pending">Ожидает</span>
+                                }
+                            </div>
+
+                            <!-- Информация о проёме -->
+                            @if (!string.IsNullOrEmpty(pos.ПроёмЭтаж) || !string.IsNullOrEmpty(pos.ПроёмРазмеры))
+                            {
+                                <div class="proem-info compact">
+                                    <div class="proem-title">Оконный проём:</div>
+                                    <div class="proem-details">
+                                        @if (!string.IsNullOrEmpty(pos.ПроёмЭтаж))
+                                        {
+                                            var floorValue = pos.ПроёмЭтаж.Replace("Этаж:", "").Replace("Этаж", "").Trim();
+                                            if (!string.IsNullOrEmpty(floorValue))
+                                            {
+                                                <span class="proem-detail">
+                                                    <span class="detail-label">Этаж:</span>
+                                                    <span class="detail-value">@floorValue</span>
+                                                </span>
+                                            }
+                                        }
+                                        @if (!string.IsNullOrEmpty(pos.ПроёмРазмеры))
+                                        {
+                                            <span class="proem-detail">
+                                                <span class="detail-label">Размеры:</span>
+                                                <span class="detail-value">@pos.ПроёмРазмеры</span>
+                                            </span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(pos.ПроёмОписание))
+                                        {
+                                            <div class="proem-description">
+                                                <span class="detail-label">Описание:</span>
+                                                <span class="detail-value">@pos.ПроёмОписание</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Фото монтажа (только просмотр) -->
+                            @if (pos.Выполнен && !string.IsNullOrEmpty(pos.Фотография))
+                            {
+                                <div class="completed-section">
+                                    <div class="success-message">
+                                        <div class="message-text">Монтаж завершён</div>
+                                        <div class="photo-preview existing">
+                                            <div class="photo-title">Фото монтажа:</div>
+                                            <div class="photo-wrapper">
+                                                <img src="/images/uploads/@pos.Фотография" alt="Фото монтажа" class="existing-photo" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else if (!pos.Выполнен)
+                            {
+                                <div class="pending-section">
+                                    <div class="message-text">Ожидает монтажа</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-text">Нет позиций для монтажа</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-message {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        color: #6c757d;
+        font-size: 14px;
+        text-align: center;
+        margin: 8px 0;
+    }
+
+    .pending-section {
+        padding: 12px;
+        background: #fff8e1;
+        border-radius: 6px;
+        margin-top: 12px;
+        font-size: 14px;
+        color: #5d4037;
+    }
+</style>

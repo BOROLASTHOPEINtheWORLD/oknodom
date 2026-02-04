@@ -3,17 +3,40 @@
     ViewData["Title"] = $"Заказ №{Model.Заказ.КодЗаказа}";
     var canConfigure = Model.МожноКонфигурировать;
     var hasConfiguration = Model.ТекущиеТовары.Any() || Model.ТекущиеУслуги.Any();
+
+    var canCancel = new[] { 1, 2, 3, 5, 8 }.Contains(Model.Заказ.КодСтатусаЗаказа);
 }
 
 <div class="order-details-manager-section">
     <div class="container">
 
         <!-- Шапка с навигацией -->
-        <div class="header-action-row">
-            <h2>Детали по заказу №@Model.Заказ.КодЗаказа</h2>
-            <a asp-action="ManagerDashboard" asp-controller="Account" class="action-btn primary">
-                ⭠ Назад к списку
-            </a>
+        <div class="header-action-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 15px; border-bottom: 1px solid #ddd; flex-wrap: wrap; gap: 15px;">
+            <div class="header-action-title" style="display: flex; flex-direction: column; gap: 5px;">
+                <h2 style="font-size: 1.8rem; color: var(--color-dark); margin: 0;">Детали по заказу №@Model.Заказ.КодЗаказа</h2>
+                
+            </div>
+
+            <div class="header-action-buttons" style="display: flex; gap: 15px; align-items: center;">
+                <a asp-action="ManagerDashboard" asp-controller="Account" class="action-btn primary">
+                    ⭠ Назад к списку
+                </a>
+
+                @if (canCancel)
+                {
+                    <form asp-controller="Manager" asp-action="CancelOrder" method="post" class="cancel-order-form" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="orderId" value="@Model.Заказ.КодЗаказа" />
+                        <button type="submit"
+                                class="cancel-order-btn"
+                                style="padding: 12px 24px; background-color: #dc3545; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;"
+                                onclick="return confirm('Вы уверены, что хотите отменить заказ? Это действие нельзя отменить.')">
+                           
+                            Отменить заказ
+                        </button>
+                    </form>
+                }
+            </div>
         </div>
 
         <!-- Уведомления -->
@@ -43,6 +66,8 @@
                     <span class="order-status">
                         @Model.Заказ.КодСтатусаЗаказаNavigation.Название
                     </span>
+
+                    
                 </div>
 
                 <!-- Основная информация -->
@@ -488,3 +513,5 @@
 
     </div>
 </div>
+
+                

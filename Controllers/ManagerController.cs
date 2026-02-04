@@ -819,5 +819,29 @@ namespace OKNODOM.Controllers
             TempData["SuccessMessage"] = "Акт успешно сформирован";
             return RedirectToAction("OrderDetails", new { id = orderId });
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var order = await _context.Заказы.FindAsync(orderId);
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Заказ не найден";
+                return RedirectToAction("ManagerDashboard");
+            }
+
+            if (order.КодСтатусаЗаказа == 6 || order.КодСтатусаЗаказа == 7)
+            {
+                TempData["ErrorMessage"] = "Невозможно отменить завершённый или уже отменённый заказ";
+                return RedirectToAction("OrderDetails", new { id = orderId });
+            }
+
+            order.КодСтатусаЗаказа = 7; // статус отмены
+            _context.Update(order);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Заказ успешно отменён";
+            return RedirectToAction("OrderDetails", new { id = orderId });
+        }
     }
 }
