@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.DTOs;
 using OKNODOM.Models;
+using OKNODOM.Services;
 using System.Security.Claims;
 
 
@@ -13,11 +14,12 @@ public class AdminController : Controller
 {
     private readonly OknodomDbContext _context;
     private readonly IWebHostEnvironment _environment;
-
-    public AdminController(OknodomDbContext context, IWebHostEnvironment environment)
+    private readonly OrderDetailsService _orderDetailsService;
+    public AdminController(OknodomDbContext context, IWebHostEnvironment environment, OrderDetailsService orderDetailsService)
     {
         _context = context;
         _environment = environment;
+        _orderDetailsService = orderDetailsService;
     }
 
     public async Task<IActionResult> Users(string search = "", int roleFilter = 0)
@@ -568,7 +570,7 @@ public class AdminController : Controller
 
             model.КодУслуги = service.КодУслуги;
             model.Название = service.Название;
-            model.БазоваяСтоимость = service.БазоваяСтоимость;
+            model.Цена = service.Цена;
             model.КодТипаУслуги = service.КодТипаУслуги;
             model.Описание = service.Описание;
             model.Активна = service.Активна;
@@ -596,7 +598,7 @@ public class AdminController : Controller
             if (service == null) return NotFound();
 
             service.Название = model.Название;
-            service.БазоваяСтоимость = model.БазоваяСтоимость;
+            service.Цена = model.Цена;
             service.КодТипаУслуги = model.КодТипаУслуги;
             service.Описание = model.Описание;
             service.Активна = model.Активна;
@@ -609,7 +611,7 @@ public class AdminController : Controller
             var service = new Услуги
             {
                 Название = model.Название,
-                БазоваяСтоимость = model.БазоваяСтоимость,
+                Цена = model.Цена,
                 КодТипаУслуги = model.КодТипаУслуги,
                 Описание = model.Описание,
                 Активна = model.Активна
@@ -670,95 +672,13 @@ public class AdminController : Controller
         return View(viewModel);
     }
 
-    // В AdminController.cs
     public async Task<IActionResult> OrderDetails(int id)
     {
-        var order = await _context.Заказы
-            .Include(z => z.КодКлиентаNavigation)
-            .Include(z => z.КодСтатусаЗаказаNavigation)
-            .FirstOrDefaultAsync(z => z.КодЗаказа == id);
+        // Используем тот же сервис!
+        var viewModel = await _orderDetailsService.BuildOrderDetailsViewModel(id);
 
-        if (order == null) return NotFound();
+        if (viewModel == null) return NotFound();
 
-        // Загружаем позиции товаров
-        var позицииТоваров = await _context.ТоварыВЗаказе
-            .Where(t => t.КодЗаказа == id)
-            .Include(t => t.КодТовараNavigation)
-                .ThenInclude(tov => tov.Окна)
-            .Include(t => t.КодОконногоПроемаNavigation)
-            .Include(t => t.Выполнения)
-            .ToListAsync();
-
-        var услуги = await _context.УслугиВЗаказе
-            .Where(u => u.КодЗаказа == id)
-            .Include(u => u.КодУслугиNavigation)
-            .ToListAsync();
-
-        var замер = await _context.Замеры
-            .Include(z => z.КодЗамерщикаNavigation)
-            .Include(z => z.ОконныеПроемы)
-            .FirstOrDefaultAsync(z => z.КодЗаказа == id);
-
-        var назначенныеМонтажники = await _context.Бригады
-            .Where(b => b.КодВыполненияNavigation.КодТовараВЗаказеNavigation.КодЗаказа == id)
-            .Select(b => b.КодМонтажникаNavigation)
-            .Distinct()
-            .ToListAsync();
-
-        // Считаем суммы
-        var суммаТоваров = позицииТоваров.Sum(t => t.ЦенаНаМоментЗаказа * t.Количество);
-        var суммаУслуг = услуги.Sum(u => u.ЦенаНаМоментЗаказа * u.Количество);
-        var общаяСумма = суммаТоваров + суммаУслуг;
-
-        // Преобразуем позиции для монтажа
-        var позицииМонтажа = позицииТоваров.Select(t => new ПозицияМонтажа
-        {
-            КодПозиции = t.Код,
-            Наименование = t.КодТовараNavigation?.Название ?? "—",
-            Размеры = t.КодТовараNavigation?.Окна != null
-                ? $"{t.КодТовараNavigation.Окна.Ширина}×{t.КодТовараNavigation.Окна.Высота} мм"
-                : "",
-            ПроёмЭтаж = t.КодОконногоПроемаNavigation != null
-                ? $"Этаж: {t.КодОконногоПроемаNavigation.Этаж}"
-                : null,
-            ПроёмРазмеры = t.КодОконногоПроемаNavigation != null
-                ? $"{t.КодОконногоПроемаNavigation.Ширина}×{t.КодОконногоПроемаNavigation.Высота} мм"
-                : null,
-            ПроёмОписание = t.КодОконногоПроемаNavigation?.Описание,
-            ДатаВыполнения = t.Выполнения.FirstOrDefault()?.ДатаВыполнения,
-            Выполнен = t.Выполнения.Any(v => v.Фотография != null),
-            Фотография = t.Выполнения.FirstOrDefault()?.Фотография,
-            КодВыполнения = t.Выполнения.FirstOrDefault()?.КодВыполнения ?? 0
-        }).ToList();
-
-        // Получаем списки пользователей
-        var замерщики = await _context.Пользователи
-            .Where(u => u.КодРоли == 3 && u.Активный) // Роль замерщика
-            .ToListAsync();
-
-        var бригадиры = await _context.Пользователи
-            .Where(u => u.КодРоли == 4 && u.Активный) // Роль монтажника/бригадира
-            .ToListAsync();
-
-        // Создаем ViewModel
-        var viewModel = new AdminOrderDetailsViewModel
-        {
-            Заказ = order,
-            Клиент = order.КодКлиентаNavigation,
-            ТекущийЗамер = замер,
-            ТекущиеТовары = позицииТоваров,
-            ТекущиеУслуги = услуги,
-            Позиции = позицииМонтажа,
-            НазначенныеМонтажники = назначенныеМонтажники,
-            Замерщики = замерщики,
-            Бригадиры = бригадиры,
-            СуммаТоваров = суммаТоваров,
-            СуммаУслуг = суммаУслуг,
-            ОбщаяСумма = общаяСумма,
-            
-        };
-
-        ViewBag.ActivePage = "Orders";
         return View(viewModel);
     }
 }

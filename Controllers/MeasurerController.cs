@@ -46,8 +46,6 @@ namespace OKNODOM.Controllers
 
             if (measure == null) return NotFound();
 
-            measure.ЕстьЛифт = model.ЕстьЛифт;
-
             if (!model.Проемы.Any(p => p.Ширина > 200 && p.Высота > 200))
             {
                 var fullModel = await GetMeasureDetailsViewModel(model.КодЗаказа, userId);
@@ -103,7 +101,6 @@ namespace OKNODOM.Controllers
                 КодЗамера = measure.КодЗамера,
                 КодЗаказа = measure.КодЗаказа,
                 ДатаЗамера = measure.ДатаЗамера,
-                ЕстьЛифт = measure.ЕстьЛифт ?? false,
                 КлиентФИО = $"{measure.КодЗаказаNavigation.КодКлиентаNavigation.Фамилия} {measure.КодЗаказаNavigation.КодКлиентаNavigation.Имя}",
                 Телефон = measure.КодЗаказаNavigation.КодКлиентаNavigation.Телефон,
                 Адрес = measure.КодЗаказаNavigation.Адрес,

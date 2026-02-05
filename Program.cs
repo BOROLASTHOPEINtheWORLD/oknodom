@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using OKNODOM.Models;
+using OKNODOM.Services;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -13,6 +14,7 @@ try
     builder.Host.UseSerilog();
     builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
     builder.Services.AddRazorPages();
+    builder.Services.AddScoped<OrderDetailsService>();
     builder.Services.AddDbContext<OknodomDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 

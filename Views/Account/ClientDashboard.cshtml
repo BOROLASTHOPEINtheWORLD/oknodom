@@ -26,7 +26,6 @@
                     <span class="info-value">@Model.Телефон</span>
                 </div>
 
-                <a href="#" class="edit-profile-btn button-outline">Изменить данные</a>
             </div>
 
             <div class="orders-main-card">
@@ -56,12 +55,15 @@
                                     </p>
                                     <p>
                                         <span class="detail-label">Стоимость:</span>
-                                        @(order.Стоимость.HasValue ? order.Стоимость.Value.ToString("N2") + "₽" : "Ожидается расчёт")
+                                        @(order.Стоимость.HasValue ? order.Стоимость.Value.ToString("N2") + " Р" : "Ожидается расчёт")
                                     </p>
                                 </div>
                                 <div class="order-actions">
-                                    <a href="#" class="order-detail-link">Подробнее</a>
+                                    <a asp-action="OrderDetails"
+                                       asp-controller="Client"
+                                       asp-route-id="@order.КодЗаказа" class="order-detail-link">Подробнее</a>
                                 </div>
+        
                             </div>
                             }
                         
@@ -76,9 +78,10 @@
                         <a asp-action="Create" asp-controller="Order" class="main-cta-button">
                             Оформить заявку
                         </a>
+
                     </div>
                 }
-                
+                    
 
             </div>
 

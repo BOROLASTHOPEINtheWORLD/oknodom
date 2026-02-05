@@ -1,0 +1,126 @@
+﻿@model OKNODOM.DTOs.AdminOrderDetailsViewModel
+@{
+    ViewData["Title"] = $"Заказ №{Model.Заказ.КодЗаказа}";
+}
+
+<div class="order-details-manager-section">
+    <div class="container">
+
+        <!-- Шапка (ПАРШАЛ, но покажет кнопку "Назад в кабинет") -->
+        @await Html.PartialAsync("_OrderHeader", Model)
+
+        <!-- Основная сетка -->
+        <div class="order-details-grid">
+            <!-- Левая колонка -->
+            <div class="detail-card">
+                <div class="card-header-main">
+                    <span class="order-card-title">
+                        Мой заказ №@Model.Заказ.КодЗаказа
+                    </span>
+                    @if (Model.Заказ.КодСтатусаЗаказаNavigation != null)
+                    {
+                        <span class="order-status">
+                            @Model.Заказ.КодСтатусаЗаказаNavigation.Название
+                        </span>
+                    }
+                </div>
+
+                <!-- Основная информация (ПАРШАЛ) -->
+                @await Html.PartialAsync("_OrderBasicInfo", Model)
+
+                <!-- Комментарий -->
+                @if (!string.IsNullOrEmpty(Model.Заказ.ПримечаниеКЗаказу))
+                {
+                    <div class="comment-box">
+                        <div class="comment-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" /></svg>
+                            Комментарий к заказу
+                        </div>
+                        <div class="comment-body">
+                            @Model.Заказ.ПримечаниеКЗаказу
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Правая колонка: ТОЛЬКО просмотр замера для клиента -->
+            <div class="action-card">
+                <div class="card-header-main">
+                    <span class="section-header-with-icon">
+                        Информация о замере
+                    </span>
+                </div>
+
+                @if (Model.ТекущийЗамер != null)
+                {
+                    var measurer = Model.ТекущийЗамер.КодЗамерщикаNavigation;
+                    if (measurer != null)
+                    {
+                        <div class="measurer-info">
+                            <div>
+                                <div class="measurer-name">
+                                    Замерщик: @measurer.Фамилия @measurer.Имя @measurer.Отчество
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="stat-item">
+                        <div class="stat-label">Дата замера</div>
+                        <div class="stat-value">
+                            @if (Model.ТекущийЗамер.ДатаЗамера.HasValue)
+                            {
+                                @Model.ТекущийЗамер.ДатаЗамера.Value.ToString("dd.MM.yyyy HH:mm")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Не указана</span>
+                            }
+                        </div>
+                    </div>
+                }
+                else if (Model.Заказ.КодСтатусаЗаказа > 1)
+                {
+                    <div class="empty-state-message">
+                        Информация о замере отсутствует
+                    </div>
+                }
+
+                <!-- КНОПКА ОПЛАТЫ -->
+                @if (!Model.Заказ.СтатусОплаты && Model.Заказ.Стоимость.HasValue)
+                {
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <div class="card-header-main">
+                            <span class="section-header-with-icon">
+                                Оплата заказа
+                            </span>
+                        </div>
+
+                        <div style="text-align: center; padding: 15px;">
+                            <div style="font-size: 1.8rem; font-weight: bold; color: var(--color-primary);
+                                            margin-bottom: 15px;">
+                                @Model.Заказ.Стоимость.Value.ToString("N0") Р
+                            </div>
+
+                            <form asp-action="PayOrder" method="post">
+                                <input type="hidden" name="id" value="@Model.Заказ.КодЗаказа" />
+                                <button type="submit" class="main-cta-button"
+                                        style="width: 100%; background-color: #28a745; font-size: 16px;">
+                                    Оплатить заказ
+                                </button>
+                            </form>
+
+                            <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                                Статус заказа изменится на "Оплачен"
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Конфигурация (ПАРШАЛ) -->
+        @await Html.PartialAsync("_OrderConfiguration", Model)
+
+    </div>
+</div>

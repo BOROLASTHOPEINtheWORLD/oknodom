@@ -7,7 +7,6 @@ namespace OKNODOM.DTOs.MeasurerDto
         public int КодЗамера { get; set; }
         public int КодЗаказа { get; set; }
         public DateTime? ДатаЗамера { get; set; }
-        public bool ЕстьЛифт {  get; set; }
         public List<WindowsOpeningViewModel> Проемы { get; set; } = new();
         public string КлиентФИО = null!;
         public string Адрес = null!;

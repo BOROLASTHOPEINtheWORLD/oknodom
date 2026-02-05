@@ -146,7 +146,7 @@ namespace OKNODOM.Controllers
                 {
                     КодУслуги = u.КодУслуги,
                     Название = u.Название,
-                    Цена = u.БазоваяСтоимость,
+                    Цена = u.Цена,
                     Описание = u.Описание
                 })
                 .ToListAsync();
@@ -477,7 +477,7 @@ namespace OKNODOM.Controllers
                     {
                         if (servicesInDb.TryGetValue(kvp.Key, out var service))
                         {
-                            decimal price = service.БазоваяСтоимость;
+                            decimal price = service.Цена;
                             int quantity = kvp.Value;
                             decimal itemTotal = price * quantity;
                             totalAmount += itemTotal;
@@ -600,11 +600,6 @@ namespace OKNODOM.Controllers
                 .Where(t => t.КодЗаказа == model.OrderId)
                 .ToListAsync();
 
-            if (!positions.Any())
-            {
-                TempData["ErrorMessage"] = "В заказе нет товаров для монтажа";
-                return RedirectToAction("OrderDetails", new { id = model.OrderId });
-            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try

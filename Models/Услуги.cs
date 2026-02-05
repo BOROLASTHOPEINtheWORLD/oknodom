@@ -17,14 +17,13 @@ public partial class Услуги
     [StringLength(255)]
     public string Название { get; set; } = null!;
 
-    [Column("базовая_стоимость", TypeName = "decimal(10, 2)")]
-    public decimal БазоваяСтоимость { get; set; }
-
     [Column("код_типа_услуги")]
     public int КодТипаУслуги { get; set; }
 
     [Column("описание")]
     public string? Описание { get; set; }
+    [Column("Цена", TypeName = "decimal(10, 2)")]
+    public decimal Цена {  get; set; }
 
     [Column("активна")]
     public bool Активна { get; set; }

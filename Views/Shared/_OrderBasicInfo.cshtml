@@ -1,0 +1,29 @@
+﻿@model OKNODOM.DTOs.AdminOrderDetailsViewModel
+
+<div class="detail-group">
+    <span class="detail-label">Дата создания:</span>
+    <span class="detail-value">@Model.Заказ.ДатаСозданияЗаказа.ToString("dd.MM.yyyy HH:mm")</span>
+</div>
+<div class="detail-group">
+    <span class="detail-label">Адрес установки:</span>
+    <span class="detail-value">@Model.Заказ.Адрес</span>
+</div>
+<div class="detail-group">
+    <span class="detail-label">Общая сумма:</span>
+    <span class="detail-value">
+        @Model.ОбщаяСумма.ToString("N0") Р
+    </span>
+</div>
+<div class="detail-group">
+    <span class="detail-label">Статус оплаты:</span>
+    <span class="detail-value">
+        @if (Model.Заказ.СтатусОплаты)
+        {
+            <span class="payment-badge paid">Оплачен</span>
+        }
+        else
+        {
+            <span class="payment-badge unpaid">Не оплачен</span>
+        }
+    </span>
+</div>

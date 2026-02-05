@@ -1,0 +1,33 @@
+﻿@model OKNODOM.DTOs.AdminOrderDetailsViewModel
+
+<div class="header-action-row">
+    <h2>Детали по заказу №@Model.Заказ.КодЗаказа</h2>
+
+    <!-- Кнопка "Назад" - разная для разных ролей -->
+    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
+    {
+        <a asp-action="Orders" asp-controller="Admin" class="action-btn primary">
+            ⭠ Назад к списку
+        </a>
+    }
+    else if (ViewContext.RouteData.Values["controller"]?.ToString() == "Client")
+    {
+        <a asp-action="Dashboard" asp-controller="Account" class="action-btn primary">
+            ⭠ Назад в кабинет
+        </a>
+    }
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-error">
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
