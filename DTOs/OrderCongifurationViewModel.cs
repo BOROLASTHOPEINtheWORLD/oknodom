@@ -15,7 +15,9 @@
         public decimal ТекущаяОбщаяСумма =>
             ТекущиеТовары.Sum(t => ПолучитьЦенуТовара(t.Key) * t.Value) +
             ТекущиеУслуги.Sum(s => ПолучитьЦенуУслуги(s.Key) * s.Value);
-
+        // Словари для кастомных цен
+        public Dictionary<int, decimal> КастомнаяЦенаТовара { get; set; } = new();
+        public Dictionary<int, decimal> КастомнаяЦенаУслуги { get; set; } = new();
         private decimal ПолучитьЦенуТовара(int кодТовара) =>
             ДоступныеТовары.FirstOrDefault(t => t.КодТовара == кодТовара)?.Цена ?? 0;
 

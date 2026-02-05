@@ -442,9 +442,12 @@ namespace OKNODOM.Controllers
                     {
                         if (windowsInDb.TryGetValue(группа.КодТовара, out var product))
                         {
-                            decimal price = product.Цена;
-                            int quantity = группа.Количество;
-                            totalAmount += price * quantity;
+                            // ★ ИЗМЕНЕНИЕ ЗДЕСЬ: используем кастомную цену если есть
+                            decimal price = model.CustomProductPrices?.TryGetValue(группа.КодТовара, out var customPrice) == true
+                                ? customPrice
+                                : product.Цена;
+
+                            totalAmount += price * группа.Количество;
 
                             int warrantyMonths = product.Окна?.БазоваяГарантияМесяцев ?? 12;
                             DateOnly warrantyUntil = DateOnly.FromDateTime(DateTime.Now.AddMonths(warrantyMonths));
@@ -453,8 +456,8 @@ namespace OKNODOM.Controllers
                             {
                                 КодЗаказа = orderId,
                                 КодТовара = группа.КодТовара,
-                                Количество = quantity,
-                                ЦенаНаМоментЗаказа = price,
+                                Количество = группа.Количество,
+                                ЦенаНаМоментЗаказа = price, 
                                 ГарантияМесяцев = warrantyMonths,
                                 ГарантияДо = warrantyUntil,
                                 КодОконногоПроема = группа.КодПроема
@@ -477,17 +480,19 @@ namespace OKNODOM.Controllers
                     {
                         if (servicesInDb.TryGetValue(kvp.Key, out var service))
                         {
-                            decimal price = service.Цена;
-                            int quantity = kvp.Value;
-                            decimal itemTotal = price * quantity;
-                            totalAmount += itemTotal;
+            
+                            decimal price = model.CustomServicePrices?.TryGetValue(kvp.Key, out var customPrice) == true
+                                ? customPrice
+                                : service.Цена;
+
+                            totalAmount += price * kvp.Value;
 
                             _context.УслугиВЗаказе.Add(new УслугиВЗаказе
                             {
                                 КодЗаказа = orderId,
                                 КодУслуги = kvp.Key,
-                                Количество = quantity,
-                                ЦенаНаМоментЗаказа = price
+                                Количество = kvp.Value,
+                                ЦенаНаМоментЗаказа = price 
                             });
                         }
                     }

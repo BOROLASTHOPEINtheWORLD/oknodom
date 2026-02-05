@@ -7,10 +7,9 @@
 
 <div class="order-details-manager-section">
     <div class="container">
-
         <!-- Шапка -->
         <div class="header-action-row">
-            <h2>Конфигцрация для заказа №@Model.КодЗаказа</h2>
+            <h2>Конфигурация для заказа №@Model.КодЗаказа</h2>
             <a asp-action="OrderDetails" asp-route-id="@Model.КодЗаказа"
                class="action-btn primary">
                 ⭠ Назад к заказу
@@ -22,11 +21,11 @@
             <div class="alert-custom error"
                  style="padding: 15px 20px; background: #ffebee; border-left: 4px solid #ef5350; color: #c62828; border-radius: 4px; font-size: 15px; margin-bottom: 20px;">
                 <span style="display: flex; align-items: center; gap: 8px;">
-                
                     @TempData["ErrorMessage"]
                 </span>
             </div>
         }
+
         <div class="filters-section">
             <form style="background: none !important;" method="get" asp-action="OrderConfigure" asp-route-id="@Model.КодЗаказа" id="filterForm">
                 <div class="filter-group">
@@ -41,8 +40,8 @@
                     Применить
                 </button>
             </form>
-
         </div>
+
         @if (Model.ОтфильтрованныеТовары.Any(t => t.ЯвляетсяОкном && t.ДеталиОкна != null))
         {
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -56,6 +55,7 @@
                 </button>
             </div>
         }
+
         <form asp-action="OrderConfigure" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="orderId" value="@Model.КодЗаказа" />
@@ -64,7 +64,6 @@
                 <!-- Левая колонка: товары -->
                 <div class="detail-card">
                     <div class="card-header-main">
-                 
                         Товары
                     </div>
 
@@ -77,6 +76,8 @@
                         <div style="max-height: 1000px; overflow-y: auto;">
                             @foreach (var товар in Model.ОтфильтрованныеТовары)
                             {
+                                // Получаем кастомную цену для этого товара (если есть), иначе используем базовую
+                                var текущаяКастомнаяЦена = Model.КастомнаяЦенаТовара.GetValueOrDefault(товар.КодТовара, товар.Цена);
                                 var текущее = Model.ТекущиеТовары.GetValueOrDefault(товар.КодТовара, 0);
                                 var привязанныйПроем = Model.ПривязкаОконКПроемам.GetValueOrDefault(товар.КодТовара);
 
@@ -87,9 +88,6 @@
                                                  alt="@товар.Название"
                                                  style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
-
-       
-                                      
 
                                         <div style="flex-grow: 1;">
                                             <div style="font-weight: bold; margin-bottom: 5px;">
@@ -112,7 +110,7 @@
                                             </div>
                                         </div>
                                     </div>
-                       
+
                                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
                                         <label class="form-label" style="min-width: 70px;">Кол-во:</label>
                                         <div style="display: flex; align-items: center; gap: 6px;">
@@ -122,15 +120,42 @@
                                                    min="0" max="99"
                                                    class="form-input"
                                                    style="width: 80px; text-align: center;"
-                                                   data-price="@товар.Цена"
-                                                   onchange="recalculate()" />
+                                                   data-price="@текущаяКастомнаяЦена"
+                                                   onchange="handleQuantityChange(this)" />
                                         </div>
-                                        <span style="margin-left: auto; font-weight: bold; color: var(--color-primary);">
-                                            @товар.Цена.ToString("N0") Р
-                                        </span>
                                     </div>
 
-                               
+                                    <!-- ★ НОВОЕ ПОЛЕ: КАСТОМНАЯ ЦЕНА -->
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                        <label class="form-label" style="min-width: 70px;">Цена за ед.:</label>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <input type="number"
+                                                   name="customProductPrices[@товар.КодТовара]"
+                                                   value="@текущаяКастомнаяЦена"
+                                                   step="0.01"
+                                                   min="0"
+                                                   class="form-input price-input"
+                                                   style="width: 120px;"
+                                                   data-product-id="@товар.КодТовара"
+                                                   onchange="updatePrice(this)" />
+                                            <span style="font-size: 12px; color: #666; cursor: pointer;"
+                                                  onclick="resetPrice(@товар.КодТовара, @товар.Цена)">
+                                                <i class="fas fa-undo"></i> Сбросить
+                                            </span>
+                                        </div>
+                                        <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
+                                            <span style="font-weight: bold; color: var(--color-primary); font-size: 16px;">
+                                                @текущаяКастомнаяЦена.ToString("N0") Р
+                                            </span>
+                                            @if (текущаяКастомнаяЦена != товар.Цена)
+                                            {
+                                                <span style="font-size: 12px; color: #888; text-decoration: line-through;">
+                                                    @товар.Цена.ToString("N0") Р
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <!-- ★ КОНЕЦ НОВОГО ПОЛЯ -->
                                     @*Плашка для окон*@
                                     @if (товар.ЯвляетсяОкном)
                                     {
@@ -143,9 +168,9 @@
                                                     style="width: 100%; margin-top: 6px;"
                                                     data-product-id="@товар.КодТовара">
                                                 <option value="">— Не выбран —</option>
-                                                    @foreach (var проем in orderedПроемы)
-                                                    {
-                                                        var localNumber = orderedПроемы.IndexOf(проем) + 1;
+                                                @foreach (var проем in orderedПроемы)
+                                                {
+                                                    var localNumber = orderedПроемы.IndexOf(проем) + 1;
                                                     var displayName = $"Проём №{localNumber} ({проем.Ширина}×{проем.Высота} мм, {проем.Этаж} эт.)";
 
                                                     <option value="@проем.КодПроема" selected="@(привязанныйПроем == проем.КодПроема)">
@@ -157,151 +182,146 @@
                                                     </option>
                                                 }
                                             </select>
-                                            <!-- Контейнер для дополнительных полей будет вставлен сюда -->
+                                            <!-- Контейнер для дополнительных полей -->
+                                            <div id="openings-container-@товар.КодТовара"></div>
                                         </div>
                                     }
 
-  
                                     @if (товар.ГарантияМесяцев > 0)
                                     {
-                                        <div style="font-size: 12px; color: var(--color-text-gray); margin-top: 6px; display: flex; align-items: center; gap: 4px;">                                        
-            
+                                        <div style="font-size: 12px; color: var(--color-text-gray); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
                                             Гарантия: @товар.ГарантияМесяцев мес.
                                         </div>
                                     }
+
                                     @if (товар.ЯвляетсяОкном && товар.ДеталиОкна != null)
-                                {
-                                    var details = товар.ДеталиОкна;
+                                    {
+                                        var details = товар.ДеталиОкна;
 
-                                    <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
-                                     
-                                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
-                                            <span style="background: #e3f2fd; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
-                                                @details.КоличествоСтворок створок
-                                            </span>
-
-                                            @if (!string.IsNullOrEmpty(details.НазваниеПрофиля))
-                                            {
-                                                <span style="background: #e8f5e9; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
-                                                    @details.НазваниеПрофиля
-                                                    @if (details.КоличествоКамер.HasValue)
-                                                    {
-                                                        <text>(@details.КоличествоКамер камер)</text>
-                                                    }
+                                        <div style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                                <span style="background: #e3f2fd; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
+                                                    @details.КоличествоСтворок створок
                                                 </span>
-                                            }
 
-                                            <span style="background: @(details.Стандартное ? "#c8e6c9" : "#ffecb3"); padding: 3px 8px; border-radius: 12px; font-size: 12px;">
-                                                @if (details.Стандартное)
+                                                @if (!string.IsNullOrEmpty(details.НазваниеПрофиля))
                                                 {
-                                                    <text>Стандартное</text>
-                                                }
-                                                else
-                                                {
-                                                    <text>Нестандартное</text>
-                                                }
-                                            </span>
-                                        </div>
-                              
-
-
-                                        @* характеристики *@
-                                        <button type="button"
-                                                class="toggle-details-btn"
-                                                data-target="window-details-@товар.КодТовара"
-                                                style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 13px; padding: 4px 0; display: flex; align-items: center; gap: 4px;">
-                                            <span>Подробнее о характеристиках</span>
-                                        </button>
-
-                                    
-                                        <div id="window-details-@товар.КодТовара" style="display: none; margin-top: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px;">
-
-                                            @if (!string.IsNullOrEmpty(details.НазваниеПрофиля))
-                                            {
-                                                <div style="margin-bottom: 10px;">
-                                                    <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Профиль: @details.НазваниеПрофиля</div>
-                                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                                        @if (details.ШиринаПрофиля.HasValue)
-                                                        {
-                                                            <div>
-                                                                <div style="font-size: 11px; color: #666;">Ширина</div>
-                                                                <div style="font-weight: 600;">@details.ШиринаПрофиля.Value мм</div>
-                                                            </div>
-                                                        }
-
+                                                    <span style="background: #e8f5e9; padding: 3px 8px; border-radius: 12px; font-size: 12px;">
+                                                        @details.НазваниеПрофиля
                                                         @if (details.КоличествоКамер.HasValue)
                                                         {
-                                                            <div>
-                                                                <div style="font-size: 11px; color: #666;">Количество камер</div>
-                                                                <div style="font-weight: 600;">@details.КоличествоКамер.Value</div>
-                                                            </div>
+                                                            <text>(@details.КоличествоКамер камер)</text>
                                                         }
+                                                    </span>
+                                                }
 
-                                                        @if (details.СопротивлениеТеплопередаче.HasValue)
-                                                        {
-                                                            <div>
-                                                                <div style="font-size: 11px; color: #666;">Теплозащита</div>
-                                                                <div style="font-weight: 600;">@details.СопротивлениеТеплопередаче.Value м²·°C/Вт</div>
-                                                            </div>
-                                                        }
-
-                                                        @if (details.Звукоизоляция.HasValue)
-                                                        {
-                                                            <div>
-                                                                <div style="font-size: 11px; color: #666;">Звукоизоляция</div>
-                                                                <div style="font-weight: 600;">@details.Звукоизоляция.Value дБ</div>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            }
-
-                                            @if (!string.IsNullOrEmpty(details.НазваниеСтеклопакета))
-                                            {
-                                                <div style="margin-bottom: 10px;">
-                                                    <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Стеклопакет</div>
-                                                    <div>@details.НазваниеСтеклопакета</div>
-                                                    @if (details.ТолщинаСтеклопакета.HasValue)
+                                                <span style="background: @(details.Стандартное ? "#c8e6c9" : "#ffecb3"); padding: 3px 8px; border-radius: 12px; font-size: 12px;">
+                                                    @if (details.Стандартное)
                                                     {
-                                                        <div style="font-size: 12px; color: #666;">Толщина: @details.ТолщинаСтеклопакета.Value мм</div>
+                                                        <text>Стандартное</text>
                                                     }
-                                                </div>
-                                            }
+                                                    else
+                                                    {
+                                                        <text>Нестандартное</text>
+                                                    }
+                                                </span>
+                                            </div>
 
-                                            @if (details.Створки?.Any() == true)
-                                            {
-                                                <div>
-                                                    <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Створки (@details.КоличествоСтворок шт.)</div>
-                                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                                        @foreach (var створка in details.Створки.OrderBy(s => s.НомерСтворки))
-                                                        {
-                                                            <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid var(--color-primary); min-width: 120px;">
-                                                                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                                                                    <span style="font-weight: 600; font-size: 12px;">#@створка.НомерСтворки</span>
-                                                                    <span style="background: var(--color-primary); color: white; padding: 1px 6px; border-radius: 10px; font-size: 11px;">
-                                                                        @створка.ТипСтворки
-                                                                    </span>
+                                            @* характеристики *@
+                                            <button type="button"
+                                                    class="toggle-details-btn"
+                                                    data-target="window-details-@товар.КодТовара"
+                                                    style="background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 13px; padding: 4px 0; display: flex; align-items: center; gap: 4px;">
+                                                <span>Подробнее о характеристиках</span>
+                                            </button>
+
+                                            <div id="window-details-@товар.КодТовара" style="display: none; margin-top: 10px; padding: 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px;">
+
+                                                @if (!string.IsNullOrEmpty(details.НазваниеПрофиля))
+                                                {
+                                                    <div style="margin-bottom: 10px;">
+                                                        <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Профиль: @details.НазваниеПрофиля</div>
+                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                                            @if (details.ШиринаПрофиля.HasValue)
+                                                            {
+                                                                <div>
+                                                                    <div style="font-size: 11px; color: #666;">Ширина</div>
+                                                                    <div style="font-weight: 600;">@details.ШиринаПрофиля.Value мм</div>
                                                                 </div>
-                                                                @if (!string.IsNullOrEmpty(створка.Описание))
-                                                                {
-                                                                    <div style="font-size: 11px; color: #666;">@створка.Описание</div>
-                                                                }
-                                                            </div>
+                                                            }
+
+                                                            @if (details.КоличествоКамер.HasValue)
+                                                            {
+                                                                <div>
+                                                                    <div style="font-size: 11px; color: #666;">Количество камер</div>
+                                                                    <div style="font-weight: 600;">@details.КоличествоКамер.Value</div>
+                                                                </div>
+                                                            }
+
+                                                            @if (details.СопротивлениеТеплопередаче.HasValue)
+                                                            {
+                                                                <div>
+                                                                    <div style="font-size: 11px; color: #666;">Теплозащита</div>
+                                                                    <div style="font-weight: 600;">@details.СопротивлениеТеплопередаче.Value м²·°C/Вт</div>
+                                                                </div>
+                                                            }
+
+                                                            @if (details.Звукоизоляция.HasValue)
+                                                            {
+                                                                <div>
+                                                                    <div style="font-size: 11px; color: #666;">Звукоизоляция</div>
+                                                                    <div style="font-weight: 600;">@details.Звукоизоляция.Value дБ</div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                @if (!string.IsNullOrEmpty(details.НазваниеСтеклопакета))
+                                                {
+                                                    <div style="margin-bottom: 10px;">
+                                                        <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Стеклопакет</div>
+                                                        <div>@details.НазваниеСтеклопакета</div>
+                                                        @if (details.ТолщинаСтеклопакета.HasValue)
+                                                        {
+                                                            <div style="font-size: 12px; color: #666;">Толщина: @details.ТолщинаСтеклопакета.Value мм</div>
                                                         }
                                                     </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                                </div>
-                             
+                                                }
 
+                                                @if (details.Створки?.Any() == true)
+                                                {
+                                                    <div>
+                                                        <div style="font-weight: 600; color: #333; margin-bottom: 6px;">Створки (@details.КоличествоСтворок шт.)</div>
+                                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                            @foreach (var створка in details.Створки.OrderBy(s => s.НомерСтворки))
+                                                            {
+                                                                <div style="background: white; padding: 8px; border-radius: 4px; border-left: 3px solid var(--color-primary); min-width: 120px;">
+                                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                                                        <span style="font-weight: 600; font-size: 12px;">#@створка.НомерСтворки</span>
+                                                                        <span style="background: var(--color-primary); color: white; padding: 1px 6px; border-radius: 10px; font-size: 11px;">
+                                                                            @створка.ТипСтворки
+                                                                        </span>
+                                                                    </div>
+                                                                    @if (!string.IsNullOrEmpty(створка.Описание))
+                                                                    {
+                                                                        <div style="font-size: 11px; color: #666;">@створка.Описание</div>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
                             }
                         </div>
                     }
                 </div>
 
+                <!-- Правая колонка: услуги -->
                 <div class="action-card">
                     <div class="card-header-main">
                         Услуги
@@ -315,7 +335,10 @@
                     {
                         @foreach (var услуга in Model.ДоступныеУслуги)
                         {
+                            // Получаем кастомную цену для этой услуги (если есть), иначе используем базовую
+                            var текущаяКастомнаяЦена = Model.КастомнаяЦенаУслуги.GetValueOrDefault(услуга.КодУслуги, услуга.Цена);
                             var текущее = Model.ТекущиеУслуги.GetValueOrDefault(услуга.КодУслуги, 0);
+
                             <div class="proem-item" style="margin-bottom: 15px;">
                                 <div style="font-weight: bold; margin-bottom: 5px;">@услуга.Название</div>
                                 @if (!string.IsNullOrEmpty(услуга.Описание))
@@ -324,7 +347,8 @@
                                         @услуга.Описание
                                     </div>
                                 }
-                                <div style="display: flex; align-items: center; gap: 12px;">
+
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
                                     <label class="form-label" style="min-width: 70px;">Кол-во:</label>
                                     <div style="display: flex; align-items: center; gap: 6px;">
                                         <input type="number"
@@ -333,50 +357,76 @@
                                                min="0" max="10"
                                                class="form-input"
                                                style="width: 80px; text-align: center;"
-                                               data-price="@услуга.Цена"
+                                               data-price="@текущаяКастомнаяЦена"
                                                onchange="recalculate()" />
                                     </div>
-                                    <span style="margin-left: auto; font-weight: bold; color: var(--color-primary);">
-                                        @услуга.Цена.ToString("N0") ₽
-                                    </span>
                                 </div>
+
+                                <!-- ★ НОВОЕ ПОЛЕ: КАСТОМНАЯ ЦЕНА ДЛЯ УСЛУГ -->
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                    <label class="form-label" style="min-width: 70px;">Цена за ед.:</label>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <input type="number"
+                                               name="customServicePrices[@услуга.КодУслуги]"
+                                               value="@текущаяКастомнаяЦена"
+                                               step="0.01"
+                                               min="0"
+                                               class="form-input service-price-input"
+                                               style="width: 120px;"
+                                               data-service-id="@услуга.КодУслуги"
+                                               onchange="updateServicePrice(this)" />
+                                        <span style="font-size: 12px; color: #666; cursor: pointer;"
+                                              onclick="resetServicePrice(@услуга.КодУслуги, @услуга.Цена)">
+                                            <i class="fas fa-undo"></i> Сбросить
+                                        </span>
+                                    </div>
+                                    <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
+                                        <span style="font-weight: bold; color: var(--color-primary); font-size: 16px;">
+                                            @текущаяКастомнаяЦена.ToString("N0") Р
+                                        </span>
+                                        @if (текущаяКастомнаяЦена != услуга.Цена)
+                                        {
+                                            <span style="font-size: 12px; color: #888; text-decoration: line-through;">
+                                                @услуга.Цена.ToString("N0") Р
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <!-- ★ КОНЕЦ НОВОГО ПОЛЯ -->
                             </div>
                         }
                     }
 
                     <div class="info-details-card" style="margin-top: 30px; padding: 20px;">
                         <h4 class="card-header-small">
-                          
                             Итоговая сумма
                         </h4>
                         <div class="stat-item" style="margin-top: 15px;">
                             <div class="stat-label">Текущая сумма:</div>
                             <div class="stat-value" id="totalAmount" style="font-size: 1.4rem; font-weight: bold; color: var(--color-primary);">
-                                @Model.ТекущаяОбщаяСумма.ToString("N0") ₽
+                                @Model.ТекущаяОбщаяСумма.ToString("N0") Р
                             </div>
                         </div>
 
                         <!-- Валидация перед отправкой -->
                         <div id="validationError" style="display: none; color: var(--color-red-color); font-size: 14px; margin-top: 10px;">
-                           
                             Нельзя сохранить окно без указания проёма.
                         </div>
 
                         <div style="margin-top: 20px;">
                             <button type="submit" class="main-cta-button" style="width: 100%;"
                                     onclick="return validateBeforeSubmit()">
-                              
                                 Сохранить конфигурацию
                             </button>
                         </div>
 
                         <div style="font-size: 13px; color: var(--color-text-gray); margin-top: 10px;">
+                            * Измененные цены сохраняются только для этого заказа
                         </div>
                     </div>
                 </div>
             </div>
         </form>
-
     </div>
 </div>
 
@@ -386,21 +436,112 @@
 
         console.log("Данные с сервера:", всеПроёмыПоТоварам);
 
+        // ★ ОБНОВЛЕННАЯ ФУНКЦИЯ ПЕРЕСЧЕТА
         function recalculate() {
             let total = 0;
+
+            // Товары
             document.querySelectorAll('input[name^="products["]').forEach(inp => {
+                const productId = inp.name.match(/products\[(\d+)\]/)?.[1];
                 const q = parseInt(inp.value) || 0;
-                const p = parseFloat(inp.dataset.price) || 0;
+
+                // Ищем кастомную цену
+                const priceInput = document.querySelector(`input[name="customProductPrices[${productId}]"]`);
+                const p = priceInput ? parseFloat(priceInput.value) || 0 : parseFloat(inp.dataset.price) || 0;
+
                 total += q * p;
+
+                // Обновляем data-price у input количества (для корректной работы в будущем)
+                inp.dataset.price = p;
             });
+
+            // Услуги
             document.querySelectorAll('input[name^="services["]').forEach(inp => {
+                const serviceId = inp.name.match(/services\[(\d+)\]/)?.[1];
                 const q = parseInt(inp.value) || 0;
-                const p = parseFloat(inp.dataset.price) || 0;
+
+                // Ищем кастомную цену
+                const priceInput = document.querySelector(`input[name="customServicePrices[${serviceId}]"]`);
+                const p = priceInput ? parseFloat(priceInput.value) || 0 : parseFloat(inp.dataset.price) || 0;
+
                 total += q * p;
+
+                // Обновляем data-price
+                inp.dataset.price = p;
             });
+
             const el = document.getElementById('totalAmount');
             if (el) {
-                el.textContent = new Intl.NumberFormat('ru-RU').format(total) + ' ₽';
+                el.textContent = new Intl.NumberFormat('ru-RU').format(total) + ' Р';
+            }
+        }
+
+        // ★ ФУНКЦИЯ ОБНОВЛЕНИЯ ЦЕНЫ ТОВАРА
+        function updatePrice(input) {
+            const productId = input.dataset.productId;
+            const newPrice = parseFloat(input.value) || 0;
+
+            // Обновляем отображение цены рядом
+            const priceDisplay = input.closest('.proem-item').querySelector('.price-input').nextElementSibling.nextElementSibling;
+            if (priceDisplay) {
+                const basePriceElement = priceDisplay.querySelector('span:first-child');
+                if (basePriceElement) {
+                    basePriceElement.textContent = new Intl.NumberFormat('ru-RU').format(newPrice) + ' Р';
+                }
+
+                // Показываем/скрываем старую цену
+                const oldPriceSpan = priceDisplay.querySelector('span:nth-child(2)');
+                const basePrice = parseFloat(input.getAttribute('data-original-price')) || 0;
+                if (oldPriceSpan && newPrice !== basePrice) {
+                    oldPriceSpan.style.display = 'block';
+                } else if (oldPriceSpan) {
+                    oldPriceSpan.style.display = 'none';
+                }
+            }
+
+            recalculate();
+        }
+
+        // ★ ФУНКЦИЯ ОБНОВЛЕНИЯ ЦЕНЫ УСЛУГИ
+        function updateServicePrice(input) {
+            const serviceId = input.dataset.serviceId;
+            const newPrice = parseFloat(input.value) || 0;
+
+            // Обновляем отображение
+            const priceDisplay = input.closest('.proem-item').querySelector('.service-price-input').nextElementSibling.nextElementSibling;
+            if (priceDisplay) {
+                const basePriceElement = priceDisplay.querySelector('span:first-child');
+                if (basePriceElement) {
+                    basePriceElement.textContent = new Intl.NumberFormat('ru-RU').format(newPrice) + ' Р';
+                }
+
+                const oldPriceSpan = priceDisplay.querySelector('span:nth-child(2)');
+                const basePrice = parseFloat(input.getAttribute('data-original-price')) || 0;
+                if (oldPriceSpan && newPrice !== basePrice) {
+                    oldPriceSpan.style.display = 'block';
+                } else if (oldPriceSpan) {
+                    oldPriceSpan.style.display = 'none';
+                }
+            }
+
+            recalculate();
+        }
+
+        // ★ СБРОС ЦЕНЫ ТОВАРА НА БАЗОВУЮ
+        function resetPrice(productId, basePrice) {
+            const priceInput = document.querySelector(`input[name="customProductPrices[${productId}]"]`);
+            if (priceInput) {
+                priceInput.value = basePrice;
+                updatePrice(priceInput);
+            }
+        }
+
+        // ★ СБРОС ЦЕНЫ УСЛУГИ НА БАЗОВУЮ
+        function resetServicePrice(serviceId, basePrice) {
+            const priceInput = document.querySelector(`input[name="customServicePrices[${serviceId}]"]`);
+            if (priceInput) {
+                priceInput.value = basePrice;
+                updateServicePrice(priceInput);
             }
         }
 
@@ -409,12 +550,10 @@
             const container = document.getElementById(`openings-container-${productId}`);
             if (!container) return;
 
-            // Удаляем старые дополнительные поля
             const oldFields = container.querySelectorAll('.additional-opening-field');
             oldFields.forEach(field => field.remove());
 
-            // Если проёмов больше 1, создаем поля для дополнительных окон
-            for (let i = 1; i < openings.length; i++) { // начинаем с 1 (второе окно)
+            for (let i = 1; i < openings.length; i++) {
                 const fieldDiv = document.createElement('div');
                 fieldDiv.className = 'additional-opening-field';
                 fieldDiv.style.marginTop = '8px';
@@ -432,13 +571,11 @@
                 select.style.width = '100%';
                 select.required = true;
 
-                // Добавляем опцию по умолчанию
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = '— Не выбран —';
                 select.appendChild(defaultOption);
 
-                // Копируем опции из основного селекта
                 const mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
                 if (mainSelect) {
                     mainSelect.querySelectorAll('option').forEach((option, index) => {
@@ -450,13 +587,11 @@
                         select.appendChild(newOption);
                     });
 
-                    // Устанавливаем значение для основного селекта
                     if (openings[0]) {
                         mainSelect.value = openings[0];
                     }
                 }
 
-                // Устанавливаем значение для дополнительного селекта
                 if (openings[i]) {
                     select.value = openings[i];
                 }
@@ -464,8 +599,6 @@
                 fieldDiv.appendChild(label);
                 fieldDiv.appendChild(select);
                 container.appendChild(fieldDiv);
-
-                console.log(`Создано поле для товара ${productId}, окно ${i + 1}, проём ${openings[i]}`);
             }
         }
 
@@ -481,7 +614,6 @@
 
             let container = document.getElementById(`openings-container-${productId}`);
 
-            // Если контейнера нет - создаём его
             if (!container) {
                 const formGroup = mainSelect.closest('.form-group');
                 if (formGroup) {
@@ -492,17 +624,13 @@
                 }
             }
 
-            // Управляем обязательностью основного селекта
             if (quantity > 0) {
                 mainSelect.required = true;
 
-                // Если у нас уже есть данные о проёмах с сервера, используем их
                 if (всеПроёмыПоТоварам && всеПроёмыПоТоварам[productId]) {
-                    // Убедимся что количество совпадает
                     if (quantity === всеПроёмыПоТоварам[productId].length) {
                         createAdditionalOpeningsWithValues(productId, всеПроёмыПоТоварам[productId]);
                     } else {
-                        // Если не совпадает, создаем пустые поля
                         createAdditionalOpenings(productId, quantity);
                     }
                 } else {
@@ -582,19 +710,13 @@
 
                 if (!openings || openings.length <= 1) continue;
 
-                // 1. Устанавливаем количество в input
                 var quantityInput = document.querySelector(`input[name='products[${productId}]']`);
                 if (quantityInput) {
                     quantityInput.value = openings.length;
-                    console.log(`Установлено количество: ${openings.length} для товара ${productId}`);
                 }
 
-                // 2. Находим или создаем контейнер
                 var mainSelect = document.querySelector(`select[name="windowToOpening[${productId}]"]`);
-                if (!mainSelect) {
-                    console.log(`Не найден основной селект для товара ${productId}`);
-                    continue;
-                }
+                if (!mainSelect) continue;
 
                 var container = document.getElementById(`openings-container-${productId}`);
                 if (!container) {
@@ -603,17 +725,13 @@
                         container = document.createElement('div');
                         container.id = `openings-container-${productId}`;
                         formGroup.appendChild(container);
-                        console.log(`Создан контейнер для товара ${productId}`);
                     }
                 }
 
-                // 3. Устанавливаем основной проём
                 if (openings[0]) {
                     mainSelect.value = openings[0];
-                    console.log(`Установлен основной проём ${openings[0]} для товара ${productId}`);
                 }
 
-                // 4. Создаем поля для дополнительных проёмов
                 createAdditionalOpeningsWithValues(productId, openings);
             }
         }
@@ -664,6 +782,15 @@
         // === ИНИЦИАЛИЗАЦИЯ ===
         document.addEventListener('DOMContentLoaded', function () {
             console.log("DOM загружен, начинаем инициализацию...");
+
+            // Сохраняем исходные цены для всех товаров и услуг
+            document.querySelectorAll('.price-input').forEach(input => {
+                input.setAttribute('data-original-price', input.value);
+            });
+
+            document.querySelectorAll('.service-price-input').forEach(input => {
+                input.setAttribute('data-original-price', input.value);
+            });
 
             // 1. Восстанавливаем проёмы из сервера
             restoreOpeningsOnLoad();

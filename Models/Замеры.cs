@@ -22,8 +22,7 @@ public partial class Замеры
     [Column("дата_замера", TypeName = "datetime")]
     public DateTime? ДатаЗамера { get; set; }
 
-    [Column("есть_лифт")]
-    public bool? ЕстьЛифт { get; set; }
+
 
     [ForeignKey("КодЗаказа")]
     public virtual Заказы КодЗаказаNavigation { get; set; } = null!;
